@@ -1,0 +1,5 @@
+ROLLBACK TRANSACTION;
+
+SELECT *
+FROM dbo.IsolationTest
+WHERE Id = 1;

@@ -1,0 +1,12 @@
+BEGIN TRANSACTION;
+
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+SELECT
+    Id,
+    Name,
+    Balance
+FROM dbo.IsolationTest
+WHERE Id = 1;
+
+

@@ -1,0 +1,8 @@
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
+SELECT
+    Id,
+    Name,
+    Balance
+FROM dbo.IsolationTest
+WHERE Id = 1;

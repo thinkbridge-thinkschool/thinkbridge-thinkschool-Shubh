@@ -1,0 +1,16 @@
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+BEGIN TRANSACTION;
+
+SELECT
+    Id,
+    Name,
+    Balance
+FROM dbo.IsolationTest
+WHERE Balance >= 2000;
+
+COMMIT TRANSACTION;
+
+
+SELECT *
+FROM dbo.IsolationTest; 

@@ -1,0 +1,5 @@
+BEGIN TRANSACTION;
+
+UPDATE dbo.IsolationTest
+SET Balance = 5000.00
+WHERE Id = 1;

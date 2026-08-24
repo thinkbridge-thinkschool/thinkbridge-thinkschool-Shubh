@@ -1,0 +1,41 @@
+<form class="login-form" (submit)="submit(); $event.preventDefault()">
+  <h2>Log in</h2>
+  <p class="hint">Real credentials from the QuotesApi dev seed data.</p>
+
+  <label>
+    Email
+    <input
+      type="email"
+      [value]="email()"
+      (input)="email.set($any($event.target).value)"
+      autocomplete="username"
+      required
+    />
+  </label>
+
+  <label>
+    Password
+    <input
+      type="password"
+      [value]="password()"
+      (input)="password.set($any($event.target).value)"
+      autocomplete="current-password"
+      required
+    />
+  </label>
+
+  <button type="submit" [disabled]="auth.loginPending()">
+    @switch (auth.loginPending()) {
+      @case (true) {
+        Logging in…
+      }
+      @default {
+        Log in
+      }
+    }
+  </button>
+
+  @if (auth.loginError()) {
+    <p class="error" role="alert">{{ auth.loginError() }}</p>
+  }
+</form>

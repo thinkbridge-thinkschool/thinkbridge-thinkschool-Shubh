@@ -1,0 +1,20 @@
+<div class="app-shell">
+  <header class="app-header">
+    <h1>QuotesApi</h1>
+
+    @if (auth.isAuthenticated()) {
+      <div class="session">
+        <span>Logged in as {{ auth.currentUserEmail() }}</span>
+        <button type="button" (click)="logout()">Log out</button>
+      </div>
+    }
+  </header>
+
+  <main>
+    @if (!auth.isAuthenticated()) {
+      <app-login />
+    }
+
+    <app-quotes-list />
+  </main>
+</div>

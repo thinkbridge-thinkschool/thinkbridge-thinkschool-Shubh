@@ -1,0 +1,39 @@
+<form class="quote-form" (submit)="submit(); $event.preventDefault()">
+  <h3>Add a quote</h3>
+
+  <label>
+    Author
+    <input
+      type="text"
+      [value]="author()"
+      (input)="author.set($any($event.target).value)"
+      maxlength="200"
+      required
+    />
+  </label>
+
+  <label>
+    Text
+    <textarea
+      [value]="text()"
+      (input)="text.set($any($event.target).value)"
+      maxlength="1000"
+      required
+    ></textarea>
+  </label>
+
+  <button type="submit" [disabled]="pending()">
+    @switch (pending()) {
+      @case (true) {
+        Creating…
+      }
+      @default {
+        Create quote
+      }
+    }
+  </button>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+</form>

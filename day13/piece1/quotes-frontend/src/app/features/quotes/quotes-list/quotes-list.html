@@ -1,0 +1,82 @@
+<section class="quotes-page">
+  <header class="quotes-header">
+    <h2>Quotes</h2>
+    <p class="page-description">{{ pageDescription() }}</p>
+  </header>
+
+  <div class="pagination-controls">
+    <button type="button" (click)="previousPage()" [disabled]="page() <= 1">
+      Previous
+    </button>
+    <span>Page {{ page() }}</span>
+    <button type="button" (click)="nextPage()" [disabled]="quotes().length < pageSize()">
+      Next
+    </button>
+
+    <label class="page-size">
+      Page size
+      <select [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+      </select>
+    </label>
+  </div>
+
+  @if (auth.isAuthenticated()) {
+    <app-quote-form (created)="onQuoteCreated()" />
+  }
+
+  @if (deleteError()) {
+    <p class="error" role="alert">{{ deleteError() }}</p>
+  }
+
+  @switch (status()) {
+    @case ('loading') {
+      <p class="loading">Loading quotes…</p>
+    }
+    @case ('error') {
+      <div class="error" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <button type="button" (click)="retry()">Retry</button>
+      </div>
+    }
+    @case ('loaded') {
+      @if (quotes().length === 0) {
+        <p class="empty">No quotes on this page.</p>
+      } @else {
+        <ul class="quote-list">
+          @for (quote of quotes(); track quote.id) {
+            <li class="quote-card">
+              <blockquote>{{ quote.text }}</blockquote>
+              <p class="attribution">— {{ quote.author || 'Unknown' }}</p>
+              <p class="meta">
+                Quote #{{ quote.id }} · owned by user #{{ quote.userId }}
+                @if (ownsQuote(quote)) {
+                  <span class="badge">yours</span>
+                }
+              </p>
+
+              @if (ownsQuote(quote)) {
+                <button
+                  type="button"
+                  (click)="deleteQuote(quote)"
+                  [disabled]="deletingId() === quote.id"
+                >
+                  @switch (deletingId() === quote.id) {
+                    @case (true) {
+                      Deleting…
+                    }
+                    @default {
+                      Delete
+                    }
+                  }
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

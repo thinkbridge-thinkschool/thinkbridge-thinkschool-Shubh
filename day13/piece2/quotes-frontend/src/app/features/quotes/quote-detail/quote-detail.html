@@ -1,0 +1,49 @@
+<section class="detail" aria-live="polite">
+  @switch (status()) {
+    @case ('idle') {
+      <div class="detail__placeholder">
+        <span class="detail__placeholder-icon" aria-hidden="true">&#10077;</span>
+        <p class="detail__placeholder-title">No quote selected</p>
+        <p class="detail__placeholder-text">Choose a quote from the list to see its full details here.</p>
+      </div>
+    }
+    @case ('loading') {
+      <div class="detail__skeleton" role="status" aria-label="Loading quote details">
+        <div class="skeleton-line skeleton-line--lg"></div>
+        <div class="skeleton-line skeleton-line--md"></div>
+        <div class="skeleton-line skeleton-line--sm"></div>
+        <div class="skeleton-line skeleton-line--pill"></div>
+      </div>
+    }
+    @case ('error') {
+      <div class="alert alert--error detail__error" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <button type="button" class="btn btn--secondary btn--sm" (click)="retry()">Retry</button>
+      </div>
+    }
+    @case ('loaded') {
+      @if (quote(); as q) {
+        <article class="detail__card">
+          <p class="detail__eyebrow">Quote #{{ q.id }}</p>
+          <blockquote class="detail__text">{{ q.text }}</blockquote>
+          <p class="detail__author">&mdash; {{ q.author || 'Unknown' }}</p>
+
+          <dl class="detail__meta">
+            <div class="detail__meta-row">
+              <dt>Author</dt>
+              <dd>{{ q.author }}</dd>
+            </div>
+            <div class="detail__meta-row">
+              <dt>Owner</dt>
+              <dd>User #{{ q.userId }}</dd>
+            </div>
+            <div class="detail__meta-row">
+              <dt>Quote ID</dt>
+              <dd>{{ q.id }}</dd>
+            </div>
+          </dl>
+        </article>
+      }
+    }
+  }
+</section>

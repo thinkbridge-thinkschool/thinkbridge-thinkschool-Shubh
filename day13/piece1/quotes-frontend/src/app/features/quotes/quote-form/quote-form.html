@@ -1,30 +1,35 @@
-<form class="quote-form" (submit)="submit(); $event.preventDefault()">
-  <h3>Add a quote</h3>
+<form class="card quote-form" (submit)="submit(); $event.preventDefault()">
+  <h3 class="quote-form__title">Add a quote</h3>
 
-  <label>
-    Author
+  <div class="field">
+    <label class="field__label" for="quote-author">Author</label>
     <input
+      id="quote-author"
+      class="input"
       type="text"
       [value]="author()"
       (input)="author.set($any($event.target).value)"
       maxlength="200"
       required
     />
-  </label>
+  </div>
 
-  <label>
-    Text
+  <div class="field">
+    <label class="field__label" for="quote-text">Text</label>
     <textarea
+      id="quote-text"
+      class="textarea"
       [value]="text()"
       (input)="text.set($any($event.target).value)"
       maxlength="1000"
       required
     ></textarea>
-  </label>
+  </div>
 
-  <button type="submit" [disabled]="pending()">
+  <button type="submit" class="btn btn--primary" [disabled]="pending()">
     @switch (pending()) {
       @case (true) {
+        <span class="spinner spinner--inline" aria-hidden="true"></span>
         Creating…
       }
       @default {
@@ -34,6 +39,6 @@
   </button>
 
   @if (error()) {
-    <p class="error" role="alert">{{ error() }}</p>
+    <p class="alert alert--error" role="alert">{{ error() }}</p>
   }
 </form>

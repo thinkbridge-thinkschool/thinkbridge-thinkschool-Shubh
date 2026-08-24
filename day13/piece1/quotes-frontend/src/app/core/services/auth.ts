@@ -50,11 +50,18 @@ export class Auth {
   readonly loginPending = signal(false);
   readonly loginError = signal<string | null>(null);
 
-  readonly isAuthenticated = computed(() => this.accessToken() !== null);
-
   private readonly decodedToken = computed(() => {
     const token = this.accessToken();
     return token ? decodeJwtPayload(token) : null;
+  });
+
+  // A stored token whose exp claim has already passed must not count as
+  // authenticated: the API rejects it, but the old check (token !== null)
+  // reported isAuthenticated() === true regardless of expiry, which left
+  // the UI showing "Logged in" while every write silently 401'd.
+  readonly isAuthenticated = computed(() => {
+    const exp = this.decodedToken()?.exp;
+    return exp !== undefined && exp * 1000 > Date.now();
   });
 
   readonly currentUserId = computed(() => {

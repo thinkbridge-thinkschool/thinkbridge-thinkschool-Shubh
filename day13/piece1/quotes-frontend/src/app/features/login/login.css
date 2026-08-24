@@ -1,29 +1,42 @@
-.login-form {
+.auth-page {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 320px;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+  justify-content: center;
+  padding: var(--space-6) 0;
 }
 
-.login-form label {
+.auth-card {
+  width: 100%;
+  max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-4);
+}
+
+.auth-card__header {
+  text-align: center;
+  margin-bottom: var(--space-1);
+}
+
+.auth-card__title {
+  font-size: 1.4rem;
+}
+
+.auth-card__subtitle {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
 .hint {
   font-size: 0.8rem;
-  color: #666;
-  margin: -0.5rem 0 0;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
 }
 
-.error {
-  color: #b00020;
-  font-size: 0.85rem;
-  margin: 0;
+@media (max-width: 480px) {
+  .auth-page {
+    padding: var(--space-5) 0;
+  }
 }

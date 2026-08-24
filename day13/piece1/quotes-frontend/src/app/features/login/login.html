@@ -1,41 +1,52 @@
-<form class="login-form" (submit)="submit(); $event.preventDefault()">
-  <h2>Log in</h2>
-  <p class="hint">Real credentials from the QuotesApi dev seed data.</p>
+<div class="auth-page">
+  <form class="card auth-card" (submit)="submit(); $event.preventDefault()">
+    <div class="auth-card__header">
+      <h2 class="auth-card__title">Welcome back</h2>
+      <p class="auth-card__subtitle">Sign in to manage and create quotes.</p>
+    </div>
 
-  <label>
-    Email
-    <input
-      type="email"
-      [value]="email()"
-      (input)="email.set($any($event.target).value)"
-      autocomplete="username"
-      required
-    />
-  </label>
+    <p class="hint">Use the seeded dev credentials from the QuotesApi backend.</p>
 
-  <label>
-    Password
-    <input
-      type="password"
-      [value]="password()"
-      (input)="password.set($any($event.target).value)"
-      autocomplete="current-password"
-      required
-    />
-  </label>
+    <div class="field">
+      <label class="field__label" for="login-email">Email</label>
+      <input
+        id="login-email"
+        class="input"
+        type="email"
+        [value]="email()"
+        (input)="email.set($any($event.target).value)"
+        autocomplete="username"
+        required
+      />
+    </div>
 
-  <button type="submit" [disabled]="auth.loginPending()">
-    @switch (auth.loginPending()) {
-      @case (true) {
-        Logging in…
+    <div class="field">
+      <label class="field__label" for="login-password">Password</label>
+      <input
+        id="login-password"
+        class="input"
+        type="password"
+        [value]="password()"
+        (input)="password.set($any($event.target).value)"
+        autocomplete="current-password"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn btn--primary btn--block" [disabled]="auth.loginPending()">
+      @switch (auth.loginPending()) {
+        @case (true) {
+          <span class="spinner spinner--inline" aria-hidden="true"></span>
+          Logging in…
+        }
+        @default {
+          Log in
+        }
       }
-      @default {
-        Log in
-      }
+    </button>
+
+    @if (auth.loginError()) {
+      <p class="alert alert--error" role="alert">{{ auth.loginError() }}</p>
     }
-  </button>
-
-  @if (auth.loginError()) {
-    <p class="error" role="alert">{{ auth.loginError() }}</p>
-  }
-</form>
+  </form>
+</div>

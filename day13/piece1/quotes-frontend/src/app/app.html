@@ -1,20 +1,27 @@
 <div class="app-shell">
-  <header class="app-header">
-    <h1>QuotesApi</h1>
-
-    @if (auth.isAuthenticated()) {
-      <div class="session">
-        <span>Logged in as {{ auth.currentUserEmail() }}</span>
-        <button type="button" (click)="logout()">Log out</button>
+  <header class="navbar">
+    <div class="navbar__inner">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">Q</span>
+        <h1 class="brand__name">QuotesApi</h1>
       </div>
-    }
+
+      @if (auth.isAuthenticated()) {
+        <div class="session">
+          <span class="session__user">{{ auth.currentUserEmail() }}</span>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="logout()">Log out</button>
+        </div>
+      }
+    </div>
   </header>
 
-  <main>
-    @if (!auth.isAuthenticated()) {
-      <app-login />
-    }
+  <main class="app-content">
+    <div class="container">
+      @if (!auth.isAuthenticated()) {
+        <app-login />
+      }
 
-    <app-quotes-list />
+      <app-quotes-list />
+    </div>
   </main>
 </div>

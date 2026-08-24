@@ -1,0 +1,38 @@
+.quotes-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.page-header__title {
+  font-size: 1.75rem;
+}
+
+.page-header__subtitle {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  max-width: 60ch;
+}
+
+.quotes-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  align-items: start;
+  gap: var(--space-5);
+}
+
+.quotes-layout__detail {
+  position: sticky;
+  top: calc(var(--space-6) + 4.5rem);
+}
+
+@media (max-width: 900px) {
+  .quotes-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .quotes-layout__detail {
+    position: static;
+  }
+}

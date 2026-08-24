@@ -1,0 +1,103 @@
+<section class="quotes-page">
+  <header class="page-header">
+    <h2 class="page-header__title">Quotes</h2>
+    <p class="page-header__subtitle">{{ pageDescription() }}</p>
+  </header>
+
+  @if (auth.isAuthenticated()) {
+    <app-quote-form (created)="onQuoteCreated()" />
+  }
+
+  @if (deleteError()) {
+    <p class="alert alert--error" role="alert">{{ deleteError() }}</p>
+  }
+
+  <div class="toolbar">
+    <div class="pagination">
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm"
+        (click)="previousPage()"
+        [disabled]="page() <= 1"
+      >
+        ‹ Previous
+      </button>
+      <span class="pagination__current">Page {{ page() }}</span>
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm"
+        (click)="nextPage()"
+        [disabled]="quotes().length < pageSize()"
+      >
+        Next ›
+      </button>
+    </div>
+
+    <label class="field field--inline page-size">
+      <span class="field__label">Page size</span>
+      <select class="select" [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+      </select>
+    </label>
+  </div>
+
+  @switch (status()) {
+    @case ('loading') {
+      <div class="state state--loading" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>Loading quotes…</p>
+      </div>
+    }
+    @case ('error') {
+      <div class="alert alert--error state--error" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <button type="button" class="btn btn--secondary btn--sm" (click)="retry()">Retry</button>
+      </div>
+    }
+    @case ('loaded') {
+      @if (quotes().length === 0) {
+        <div class="state state--empty">
+          <p>No quotes on this page.</p>
+        </div>
+      } @else {
+        <ul class="quote-list">
+          @for (quote of quotes(); track quote.id) {
+            <li class="quote-card">
+              <blockquote class="quote-card__text">{{ quote.text }}</blockquote>
+              <p class="quote-card__author">— {{ quote.author || 'Unknown' }}</p>
+
+              <div class="quote-card__footer">
+                <p class="quote-card__meta">
+                  Quote #{{ quote.id }} · owned by user #{{ quote.userId }}
+                  @if (ownsQuote(quote)) {
+                    <span class="badge">Yours</span>
+                  }
+                </p>
+
+                @if (ownsQuote(quote)) {
+                  <button
+                    type="button"
+                    class="btn btn--danger btn--sm"
+                    (click)="deleteQuote(quote)"
+                    [disabled]="deletingId() === quote.id"
+                  >
+                    @switch (deletingId() === quote.id) {
+                      @case (true) {
+                        Deleting…
+                      }
+                      @default {
+                        Delete
+                      }
+                    }
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

@@ -1,0 +1,120 @@
+<section class="quotes-list-panel">
+  <p class="list-status">{{ pageDescription() }}</p>
+
+  @if (auth.isAuthenticated()) {
+    <app-quote-form (created)="onQuoteCreated()" />
+  }
+
+  @if (deleteError()) {
+    <p class="alert alert--error" role="alert">{{ deleteError() }}</p>
+  }
+
+  <div class="toolbar">
+    <div class="pagination">
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm"
+        (click)="previousPage()"
+        [disabled]="page() <= 1"
+      >
+        ‹ Previous
+      </button>
+      <span class="pagination__current">Page {{ page() }}</span>
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm"
+        (click)="nextPage()"
+        [disabled]="quotes().length < pageSize()"
+      >
+        Next ›
+      </button>
+    </div>
+
+    <label class="field field--inline page-size">
+      <span class="field__label">Page size</span>
+      <select class="select" [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+      </select>
+    </label>
+  </div>
+
+  @switch (status()) {
+    @case ('loading') {
+      <div class="list-skeleton" role="status" aria-label="Loading quotes">
+        @for (i of [0, 1, 2]; track i) {
+          <div class="list-skeleton__card">
+            <div class="skeleton-line skeleton-line--lg"></div>
+            <div class="skeleton-line skeleton-line--md"></div>
+            <div class="skeleton-line skeleton-line--sm"></div>
+          </div>
+        }
+      </div>
+    }
+    @case ('error') {
+      <div class="alert alert--error state--error" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <button type="button" class="btn btn--secondary btn--sm" (click)="retry()">Retry</button>
+      </div>
+    }
+    @case ('loaded') {
+      @if (quotes().length === 0) {
+        <div class="state state--empty">
+          <p>No quotes on this page yet.</p>
+          <p class="list-status">Try a different page, or create the first one above.</p>
+        </div>
+      } @else {
+        <ul class="quote-list">
+          @for (quote of quotes(); track quote.id) {
+            <li class="quote-card" [class.quote-card--selected]="selectedId() === quote.id">
+              <blockquote class="quote-card__text">{{ quote.text }}</blockquote>
+              <p class="quote-card__author">— {{ quote.author || 'Unknown' }}</p>
+
+              <div class="quote-card__footer">
+                <p class="quote-card__meta">
+                  Quote #{{ quote.id }} · owned by user #{{ quote.userId }}
+                  @if (ownsQuote(quote)) {
+                    <span class="badge">Yours</span>
+                  }
+                </p>
+
+                <div class="quote-card__actions">
+                  <button
+                    type="button"
+                    class="btn btn--primary btn--sm"
+                    (click)="selectQuote(quote)"
+                  >
+                    @if (selectedId() === quote.id) {
+                      Selected
+                    } @else {
+                      View details
+                    }
+                  </button>
+
+                  @if (ownsQuote(quote)) {
+                    <button
+                      type="button"
+                      class="btn btn--danger btn--sm"
+                      (click)="deleteQuote(quote)"
+                      [disabled]="deletingId() === quote.id"
+                    >
+                      @switch (deletingId() === quote.id) {
+                        @case (true) {
+                          Deleting…
+                        }
+                        @default {
+                          Delete
+                        }
+                      }
+                    </button>
+                  }
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

@@ -1,0 +1,61 @@
+<form class="card quote-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="quote-form__header">
+    <h2 class="quote-form__title">Create a quote</h2>
+    <p class="quote-form__subtitle">Add a new quote to the QuotesApi collection.</p>
+  </div>
+
+  @if (successMessage(); as message) {
+    <p class="alert alert--success" role="status">{{ message }}</p>
+  }
+
+  @if (serverError(); as message) {
+    <p class="alert alert--error" role="alert">{{ message }}</p>
+  }
+
+  <div class="field">
+    <label class="field__label" for="author">Author</label>
+    <input
+      id="author"
+      #authorInput
+      class="input"
+      type="text"
+      formControlName="author"
+      maxlength="200"
+      autocomplete="off"
+      [attr.aria-invalid]="fieldError('author') ? true : null"
+      [attr.aria-describedby]="describedBy('author')"
+    />
+    @if (fieldError('author'); as message) {
+      <p id="author-error" class="field-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field__label" for="text">Text</label>
+    <textarea
+      id="text"
+      #textInput
+      class="textarea"
+      formControlName="text"
+      maxlength="1000"
+      autocomplete="off"
+      [attr.aria-invalid]="fieldError('text') ? true : null"
+      [attr.aria-describedby]="describedBy('text')"
+    ></textarea>
+    @if (fieldError('text'); as message) {
+      <p id="text-error" class="field-error">{{ message }}</p>
+    }
+  </div>
+
+  <button type="submit" class="btn btn--primary btn--block" [disabled]="pending()">
+    @switch (pending()) {
+      @case (true) {
+        <span class="spinner spinner--inline" aria-hidden="true"></span>
+        Creating…
+      }
+      @default {
+        Create quote
+      }
+    }
+  </button>
+</form>

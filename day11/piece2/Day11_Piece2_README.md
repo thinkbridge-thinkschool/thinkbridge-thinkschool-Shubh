@@ -372,7 +372,7 @@ The performance improvements could regress if:
 Repository / Piece 2:
 
 ```text
-https://github.com/thinkbridge-thinkschool/thinkbridge-thinkschool-Shubh
+https://github.com/thinkbridge-thinkschool/thinkbridge-thinkschool-Shubh/
 ```
 
 Branch:

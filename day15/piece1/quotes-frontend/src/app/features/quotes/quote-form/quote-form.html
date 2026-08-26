@@ -1,0 +1,57 @@
+<form class="card quote-form" (submit)="handleSubmit($event)" novalidate>
+  <div class="quote-form__header">
+    <h2 class="quote-form__title">Create a quote</h2>
+    <p class="quote-form__subtitle">Add a new quote to the QuotesApi collection.</p>
+  </div>
+
+  @if (successMessage(); as message) {
+    <p class="alert alert--success" role="status">{{ message }}</p>
+  }
+
+  @if (serverError(); as message) {
+    <p class="alert alert--error" role="alert">{{ message }}</p>
+  }
+
+  <div class="field">
+    <label class="field__label" for="author">Author</label>
+    <input
+      id="author"
+      class="input"
+      type="text"
+      [formField]="quoteForm.author"
+      autocomplete="off"
+      [attr.aria-invalid]="fieldError(quoteForm.author) ? true : null"
+      [attr.aria-describedby]="describedBy('author', quoteForm.author)"
+    />
+    @if (fieldError(quoteForm.author); as message) {
+      <p id="author-error" class="field-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field__label" for="text">Text</label>
+    <textarea
+      id="text"
+      class="textarea"
+      [formField]="quoteForm.text"
+      autocomplete="off"
+      [attr.aria-invalid]="fieldError(quoteForm.text) ? true : null"
+      [attr.aria-describedby]="describedBy('text', quoteForm.text)"
+    ></textarea>
+    @if (fieldError(quoteForm.text); as message) {
+      <p id="text-error" class="field-error">{{ message }}</p>
+    }
+  </div>
+
+  <button type="submit" class="btn btn--primary btn--block" [disabled]="quoteForm().submitting()">
+    @switch (quoteForm().submitting()) {
+      @case (true) {
+        <span class="spinner spinner--inline" aria-hidden="true"></span>
+        Creating…
+      }
+      @default {
+        Create quote
+      }
+    }
+  </button>
+</form>

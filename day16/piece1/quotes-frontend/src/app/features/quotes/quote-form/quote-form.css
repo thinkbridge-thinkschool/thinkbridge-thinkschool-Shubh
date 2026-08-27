@@ -1,0 +1,25 @@
+.quote-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: 0;
+}
+
+.quote-form__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.quote-form__title {
+  font-size: 1.3rem;
+}
+
+.quote-form__subtitle {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.quote-form .textarea {
+  min-height: 8rem;
+}

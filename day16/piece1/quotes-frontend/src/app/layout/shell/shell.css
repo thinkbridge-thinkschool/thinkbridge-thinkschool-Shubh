@@ -5,12 +5,15 @@
 }
 
 .navbar {
-  background: var(--color-surface);
+  background: var(--color-bg-raised);
   border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .navbar__inner {
-  max-width: 760px;
+  max-width: 1160px;
   margin: 0 auto;
   padding: var(--space-4) var(--space-5);
   display: flex;
@@ -27,7 +30,7 @@
 }
 
 .brand__mark {
-  display: inline-flex; 
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2rem;
@@ -67,7 +70,7 @@
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: #22a35a;
+  background: var(--color-success);
 }
 
 .app-content {

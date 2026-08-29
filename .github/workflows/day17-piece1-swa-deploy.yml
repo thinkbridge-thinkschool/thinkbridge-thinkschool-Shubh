@@ -1,0 +1,76 @@
+name: Day 17 Piece 1 - Deploy quotes-frontend to Azure Static Web Apps
+
+on:
+  push:
+    branches:
+      - main
+      - day17-piece1
+    paths:
+      - 'day17/piece1/quotes-frontend/**'
+      - '.github/workflows/day17-piece1-swa-deploy.yml'
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+    paths:
+      - 'day17/piece1/quotes-frontend/**'
+      - '.github/workflows/day17-piece1-swa-deploy.yml'
+
+jobs:
+  build_and_deploy:
+    if: github.event_name == 'push' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    name: Build and deploy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: day17/piece1/quotes-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: day17/piece1/quotes-frontend
+        run: npm ci
+
+      - name: Build (production)
+        working-directory: day17/piece1/quotes-frontend
+        run: npm run build
+
+      # Copies the SWA routing/fallback config next to the build output so it
+      # ships with the deployed app (staticwebapp.config.json lives at the
+      # project root, not inside src/, so Angular's build never picks it up).
+      - name: Copy staticwebapp.config.json into build output
+        run: cp day17/piece1/quotes-frontend/staticwebapp.config.json day17/piece1/quotes-frontend/dist/quotes-frontend/browser/staticwebapp.config.json
+
+      # With skip_app_build: true, the SWA action does not perform its own
+      # build (so it never joins app_location + output_location the way it
+      # would for a build it ran itself) — it uploads app_location AS the
+      # artifact root directly. The first run pointed app_location at the
+      # Angular project root instead of the actual compiled output, so it
+      # never found an index.html: "Failed to find a default file in the
+      # app artifacts folder (day17/piece1/quotes-frontend)."
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_QUOTES_FRONTEND }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: 'day17/piece1/quotes-frontend/dist/quotes-frontend/browser'
+          output_location: ''
+          skip_app_build: true
+
+  close_pull_request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close pull request staging environment
+    steps:
+      - name: Close pull request
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_QUOTES_FRONTEND }}
+          action: 'close'

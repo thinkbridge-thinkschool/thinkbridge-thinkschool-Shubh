@@ -64,8 +64,21 @@ if (builder.Environment.IsEnvironment("Testing"))
 }
 else
 {
+    // A bare relative filename resolves against the process's current
+    // working directory, which isn't guaranteed writable under the
+    // container image this now also runs in (Azure Container Apps) —
+    // that combination throws SQLite Error 14 ('unable to open database
+    // file') on every request. /tmp is writable in that image.
+    // This must key off the OS, not the ASPNETCORE_ENVIRONMENT name: an
+    // earlier version gated it on IsProduction(), which broke the moment
+    // the same Linux container was run with ASPNETCORE_ENVIRONMENT=Development
+    // (e.g. to reach the seed-data block) — same container, same unwritable
+    // working directory, wrong condition.
+    var sqliteDataSource = OperatingSystem.IsWindows()
+        ? "Data Source=quotes.db"
+        : "Data Source=/tmp/quotes.db";
     builder.Services.AddDbContext<QuotesDbContext>(options =>
-        options.UseSqlite("Data Source=quotes.db"));
+        options.UseSqlite(sqliteDataSource));
 }
 
 builder.Services.AddScoped<IQuoteRepository, QuoteRepository>();
@@ -179,18 +192,34 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddScoped<IAuthorizationHandler, OwnsQuoteHandler>();
 
-// CORS: allow the Day 13 Angular dev server to call this API directly.
+// CORS: allow the Day 13 Angular dev server, and the real deployed Day 17
+// Piece 1 Azure Static Web App, to call this API directly.
 const string angularDevCorsPolicy = "AngularDev";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(angularDevCorsPolicy, policy =>
         policy
-            .WithOrigins("http://localhost:4200", "https://localhost:4200")
+            .WithOrigins(
+                "http://localhost:4200",
+                "https://localhost:4200",
+                "https://white-mushroom-0f3920100.7.azurestaticapps.net")
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
 
 var app = builder.Build();
+
+// A fresh /tmp/quotes.db (see the SQLite Data Source above) has no schema
+// until migrations are applied — without this every query 500s with
+// "no such table", the same symptom as the unwritable-path bug this
+// accompanies. Migrate() is idempotent, so this is safe to run unconditionally.
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using var migrationScope = app.Services.CreateScope();
+    migrationScope.ServiceProvider
+        .GetRequiredService<QuotesDbContext>()
+        .Database.Migrate();
+}
 
 app.Use(async (ctx, next) =>
 {

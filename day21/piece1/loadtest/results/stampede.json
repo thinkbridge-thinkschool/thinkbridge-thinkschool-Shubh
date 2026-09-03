@@ -1,0 +1,17 @@
+﻿{
+    "label":  "stampede",
+    "mode":  "stampede",
+    "quoteId":  1,
+    "concurrentVUs":  100,
+    "duration":  "single burst (1 iteration/VU)",
+    "totalRequests":  100,
+    "requestsPerSec":  1802.29,
+    "p99LatencyMs":  21.32,
+    "avgLatencyMs":  9.45,
+    "dbTotalQueries":  1,
+    "dbQueriesPerSec":  1.3,
+    "cacheHits":  99,
+    "cacheMisses":  1,
+    "cacheTotal":  100,
+    "cacheHitRate":  0.99
+}

@@ -1,0 +1,13 @@
+{
+  "description": "Proves Redis is the real L2 tier: after killing and restarting the QuotesApi process (which wipes the in-memory L1 cache and all in-process counters), a single GET for a quote that was cached before the restart is served with zero new Quotes-table DB queries.",
+  "steps": [
+    "1. Populate cache: GET /api/quotes/1 while the app is running (done during the after/stampede tests above).",
+    "2. Verify Redis holds the key: docker exec day21-redis redis-cli KEYS \"quotesapi:*\" -> quotesapi:quote:1 (TTL 290s remaining).",
+    "3. Kill the QuotesApi process (Stop-Process) and start a fresh instance -> in-memory L1 cache and DbQueryCounter/CacheMetrics singletons are empty again.",
+    "4. Reset counters, then GET /api/quotes/1 again on the fresh process."
+  ],
+  "beforeRequest": { "totalQueries": 0, "queriesPerSecond": 0 },
+  "afterRequest": { "totalQueries": 0, "queriesPerSecond": 0 },
+  "cacheMetricsAfterRequest": { "hits": 1, "misses": 0, "total": 1, "hitRate": 1 },
+  "conclusion": "totalQueries stayed at 0 and the request was recorded as a cache hit, even though the process (and its L1 memory cache) had just started. The quote data could only have come from Redis (L2), proving Redis is genuinely used as the L2 cache and not merely configured."
+}

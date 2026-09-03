@@ -1,0 +1,17 @@
+﻿{
+    "label":  "before",
+    "mode":  "sustained",
+    "quoteId":  1,
+    "concurrentVUs":  100,
+    "duration":  "15s",
+    "totalRequests":  14159,
+    "requestsPerSec":  939.76,
+    "p99LatencyMs":  211.74,
+    "avgLatencyMs":  105.71,
+    "dbTotalQueries":  14159,
+    "dbQueriesPerSec":  879.96,
+    "cacheHits":  0,
+    "cacheMisses":  0,
+    "cacheTotal":  0,
+    "cacheHitRate":  0
+}

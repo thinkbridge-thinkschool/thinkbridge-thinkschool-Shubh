@@ -1,0 +1,17 @@
+﻿{
+    "label":  "after",
+    "mode":  "sustained",
+    "quoteId":  1,
+    "concurrentVUs":  100,
+    "duration":  "15s",
+    "totalRequests":  95253,
+    "requestsPerSec":  6345.97,
+    "p99LatencyMs":  107.20,
+    "avgLatencyMs":  13.92,
+    "dbTotalQueries":  1,
+    "dbQueriesPerSec":  0.06,
+    "cacheHits":  95252,
+    "cacheMisses":  1,
+    "cacheTotal":  95253,
+    "cacheHitRate":  1
+}

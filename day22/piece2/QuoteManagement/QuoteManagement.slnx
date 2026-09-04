@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/QuoteManagement/QuoteManagement.csproj" />
+  </Folder>
+  <Folder Name="/src/QuoteManagement/">
+    <Project Path="src/QuoteManagement/Shared/Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/QuoteManagement/Modules/">
+    <Project Path="src/QuoteManagement/Modules/Identity/Identity.csproj" />
+    <Project Path="src/QuoteManagement/Modules/Notifications/Notifications.csproj" />
+    <Project Path="src/QuoteManagement/Modules/Quotes/Quotes.csproj" />
+  </Folder>
+</Solution>

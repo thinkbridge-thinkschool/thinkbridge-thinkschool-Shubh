@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Everything in this module except QuotesModule (Api/QuotesModule.cs) is `internal`.
+    Nothing outside this project — not the Host, not another module — can new up a Quote,
+    call the repository, or touch QuotesDbContext directly. The only way in is the public
+    DI/endpoint-mapping surface, and the only way out is the QuoteCreatedIntegrationEvent
+    contract defined in Shared (never a type owned by this module).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets this class library define minimal API endpoints and DI extensions without
+         being its own web host — the Host project maps the endpoints this module exposes. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Shared.csproj" />
+  </ItemGroup>
+
+</Project>

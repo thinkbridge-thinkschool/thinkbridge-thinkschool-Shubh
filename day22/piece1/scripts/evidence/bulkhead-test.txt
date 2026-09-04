@@ -1,0 +1,19 @@
+Captured from a real run of scripts/bulkhead-test.sh (2026-09-04, ~13:11 local). Copied
+verbatim from the terminal. Note: every server log line appears twice — a pre-existing
+(Day 21) Program.cs Serilog setup registers both a configured console sink and an extra
+`.WriteTo.Console()` call, so each event is written to the console twice. This is not part
+of the Day 22 resilience code; the "log lines" counts below are therefore 2x the number of
+real events.
+
+=== Bulkhead/concurrency-limit test ===
+Firing 20 concurrent GET /api/resilience/demo/slow requests (limit = 5, queue = 0)...
+
+--- Response status codes across all 20 requests ---
+     15 429
+      5 504
+200 (success): 0 | 504 (admitted, then timed out): 5 | 429 (bulkhead rejected): 15
+Admitted into the dependency call (200 + 504): 5 (expect 5)
+
+--- Server log: bulkhead rejections vs admitted outbound calls ---
+Rejection log lines: 30   (= 15 real rejections x 2, see note above)
+Actual outbound calls that reached the dependency: 10   (= 5 real admitted calls x 2, see note above)

@@ -1,0 +1,31 @@
+Captured from a real run of scripts/retry-test.sh against a freshly started instance
+(2026-09-04, ~13:11 local). Copied verbatim from the terminal.
+
+=== Retry-with-backoff test ===
+Circuit state before: {"state":"Closed"}
+--- Calling GET /api/resilience/demo/failure (idempotent, retryable) ---
+{"outcome":"Failure","statusCode":500,"detail":"Dependency returned a failure status"}
+HTTP 502
+Elapsed: 1737ms (expect ~1400ms+ = 200+400+800ms backoff plus call time)
+
+--- Server log: attempt / delay / reason for each retry ---
+[13:11:06 INF] [DemoDependencyClient] Outbound GET /demo/failure started
+[13:11:06 INF] [DemoDependency] /demo/failure called — returning 500
+[13:11:06 WRN] [Resilience] Retry attempt 1 after 200ms — reason: HTTP 500
+[13:11:06 INF] [DemoDependency] /demo/failure called — returning 500
+[13:11:06 WRN] [Resilience] Retry attempt 2 after 400ms — reason: HTTP 500
+[13:11:07 INF] [DemoDependency] /demo/failure called — returning 500
+[13:11:07 WRN] [Resilience] Retry attempt 3 after 800ms — reason: HTTP 500
+[13:11:08 INF] [DemoDependency] /demo/failure called — returning 500
+[13:11:08 ERR] [DemoDependencyClient] Outbound GET /demo/failure failed after retries (500)
+
+Circuit state after: {"state":"Closed"} (one call's retries alone did not trip the breaker)
+
+--- Bonus: POST (non-idempotent) is never retried, for comparison ---
+{"outcome":"Failure","statusCode":500,"detail":"Dependency returned a failure status"}
+HTTP 502
+Elapsed: 129ms (single attempt only — no backoff wait, vs ~1700ms for the GET/retry case above)
+
+[13:12:39 INF] [DemoDependencyClient] Outbound POST /demo/failure started
+[13:12:39 INF] [DemoDependency] /demo/failure called — returning 500
+[13:12:39 ERR] [DemoDependencyClient] Outbound POST /demo/failure failed after retries (500)

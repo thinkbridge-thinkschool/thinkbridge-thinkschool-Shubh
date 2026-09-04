@@ -1,0 +1,15 @@
+Captured from a real run of scripts/timeout-test.sh (2026-09-04, ~13:11 local). Copied
+verbatim from the terminal.
+
+=== Timeout test ===
+--- Calling GET /api/resilience/demo/slow (dependency delays 6000ms, pipeline timeout is 3000ms) ---
+{"outcome":"TimedOut","statusCode":null,"detail":"Call exceeded the configured timeout"}
+HTTP 504
+Elapsed: 3172ms (expect ~3000ms, NOT ~6000ms)
+
+--- Server log: outbound call started -> timeout -> cancelled ---
+[13:11:14 INF] [DemoDependencyClient] Outbound GET /demo/slow started
+[13:11:14 INF] [DemoDependency] /demo/slow called — delaying 6000ms
+[13:11:17 INF] [DemoDependency] /demo/slow request was cancelled by the caller (client-side timeout)
+[13:11:17 WRN] [Resilience] Timeout after 3s calling the outbound dependency — cancelling the request
+[13:11:17 ERR] [DemoDependencyClient] Outbound GET /demo/slow timed out and was cancelled

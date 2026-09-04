@@ -1,0 +1,47 @@
+Captured from a real run of scripts/circuit-breaker-test.sh against a freshly started
+instance (2026-09-04, ~13:12 local). Copied verbatim from the terminal (duplicate log
+lines — see bulkhead-test.txt note — trimmed here for readability; nothing was reworded).
+
+=== Circuit breaker test ===
+Circuit state at start: {"state":"Closed"}
+
+--- Step A/B: driving sustained failures against GET /api/resilience/demo/failure until the circuit opens ---
+  call 1 -> {"outcome":"Failure","statusCode":500,"detail":"Dependency returned a failure status"} | circuit state: {"state":"Closed"}
+  call 2 -> {"outcome":"Failure","statusCode":500,"detail":"Dependency returned a failure status"} | circuit state: {"state":"Open"}
+
+>>> Circuit is now: {"state":"Open"}
+[13:12:12 WRN] [Resilience] Retry attempt 1 after 200ms — reason: HTTP 500
+[13:12:12 WRN] [Resilience] Retry attempt 2 after 400ms — reason: HTTP 500
+[13:12:13 WRN] [Resilience] Retry attempt 3 after 800ms — reason: HTTP 500
+[13:12:14 WRN] [Resilience] Retry attempt 1 after 200ms — reason: HTTP 500
+[13:12:14 WRN] [Resilience] Retry attempt 2 after 400ms — reason: HTTP 500
+[13:12:14 WRN] [Resilience] Retry attempt 3 after 800ms — reason: HTTP 500
+[13:12:15 ERR] [Resilience] Circuit OPENED for 8s — last failure: HTTP 500
+
+--- Step C: calling again 3x while OPEN — must fail fast, dependency must NOT be called ---
+  call 1 -> {"outcome":"CircuitOpen","statusCode":null,"detail":"Circuit is open — request failed fast"} (elapsed 137ms — fast, no retry/backoff wait)
+  call 2 -> {"outcome":"CircuitOpen","statusCode":null,"detail":"Circuit is open — request failed fast"} (elapsed 118ms — fast, no retry/backoff wait)
+  call 3 -> {"outcome":"CircuitOpen","statusCode":null,"detail":"Circuit is open — request failed fast"} (elapsed 108ms — fast, no retry/backoff wait)
+  server log for these calls:
+[13:12:15 ERR] [DemoDependencyClient] Outbound GET /demo/failure failed after retries (500)
+[13:12:16 INF] [DemoDependencyClient] Outbound GET /demo/failure started
+[13:12:16 WRN] [DemoDependencyClient] Outbound GET /demo/failure rejected — circuit is OPEN, dependency was NOT called
+[13:12:16 INF] [DemoDependencyClient] Outbound GET /demo/failure started
+[13:12:16 WRN] [DemoDependencyClient] Outbound GET /demo/failure rejected — circuit is OPEN, dependency was NOT called
+[13:12:16 INF] [DemoDependencyClient] Outbound GET /demo/failure started
+[13:12:16 WRN] [DemoDependencyClient] Outbound GET /demo/failure rejected — circuit is OPEN, dependency was NOT called
+  outbound calls that actually reached the dependency during these OPEN requests: 0 (expect 0)
+
+--- Step D: waiting 8s for the break duration to expire ---
+
+--- Step E/F: sending the HALF-OPEN probe against the SUCCESS scenario ---
+  probe result: {"outcome":"Success","statusCode":200,"detail":"OK"}
+  server log for the probe:
+[13:12:25 INF] [DemoDependencyClient] Outbound GET /demo/success started
+[13:12:25 WRN] [Resilience] Circuit HALF-OPEN — probing the dependency with the next call
+[13:12:25 INF] [DemoDependency] /demo/success called — returning 200
+[13:12:25 INF] [Resilience] Circuit CLOSED — dependency has recovered
+[13:12:25 INF] [DemoDependencyClient] Outbound GET /demo/success succeeded (200)
+
+--- Step G: confirming recovery ---
+Circuit state after successful probe: {"state":"Closed"} (expect Closed)

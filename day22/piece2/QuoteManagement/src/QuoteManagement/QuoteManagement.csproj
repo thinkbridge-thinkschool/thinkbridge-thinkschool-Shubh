@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    The ONE deployable in this solution. It references every module project but contains
+    no business logic of its own — it is purely a composition root: each module's
+    AddXModule()/MapXEndpoints() extension methods are called here, and that is the only
+    place in the whole solution that knows all three modules exist.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!--
+    Modules/ and Shared/ are separate projects nested under this one for the folder layout
+    the task specifies, so the SDK's default recursive **/*.cs glob would otherwise compile
+    their source files directly into this project too, on top of referencing their built
+    DLLs below. Excluding them keeps the module boundary real: this project only sees what
+    each module's ProjectReference exposes as public.
+  -->
+  <ItemGroup>
+    <Compile Remove="Modules\**\*.cs" />
+    <Compile Remove="Shared\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Shared\Shared.csproj" />
+    <ProjectReference Include="Modules\Quotes\Quotes.csproj" />
+    <ProjectReference Include="Modules\Identity\Identity.csproj" />
+    <ProjectReference Include="Modules\Notifications\Notifications.csproj" />
+  </ItemGroup>
+
+</Project>

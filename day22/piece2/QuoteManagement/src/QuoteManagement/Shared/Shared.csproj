@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Shared holds only cross-cutting primitives (base types, Result, and the integration-
+    event abstractions/contracts every module needs to agree on). It has zero package
+    dependencies and zero business logic — if a type here starts making a business
+    decision, it belongs in a module instead.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only needed for the in-process integration-event dispatcher's DI lookups; this is
+         infrastructure plumbing, not a business dependency. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+  </ItemGroup>
+
+</Project>

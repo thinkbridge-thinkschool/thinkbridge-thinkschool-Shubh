@@ -75,6 +75,12 @@ public class QuotesDbContext : DbContext
             entity.Property(u => u.PasswordHash)
                 .IsRequired()
                 .HasMaxLength(100);
+
+            // Registration checks for an existing email before inserting, but only this
+            // index actually prevents two concurrent registrations for the same address
+            // from both passing that check and creating duplicate accounts.
+            entity.HasIndex(u => u.Email)
+                .IsUnique();
         });
         modelBuilder.Entity<OutboxMessage>(entity =>
             {

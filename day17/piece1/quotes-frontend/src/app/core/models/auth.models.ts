@@ -4,6 +4,12 @@ export interface LoginRequest {
   password: string;
 }
 
+// Mirrors QuotesApi.Models.RegisterRequest (Program.cs POST /api/auth/register).
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
+
 // Mirrors the anonymous object returned by POST /api/auth/login and POST /api/auth/refresh
 // in Program.cs. Field names are snake_case exactly as written by the backend.
 export interface TokenResponse {

@@ -486,6 +486,74 @@ app.MapPost(
             collection);
     });
 
+// REGISTER
+app.MapPost(
+    "/api/auth/register",
+    async (
+        RegisterRequest request,
+        QuotesDbContext db,
+        CancellationToken cancellationToken) =>
+    {
+        var email = request.Email?.Trim();
+        var password = request.Password;
+
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    ["email"] = ["A valid email address is required."]
+                });
+        }
+
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    ["password"] = ["Password must be at least 8 characters."]
+                });
+        }
+
+        var alreadyExists =
+            await db.Users.AnyAsync(u => u.Email == email, cancellationToken);
+        if (alreadyExists)
+        {
+            // Results.Problem (not Results.Conflict) so the response carries the
+            // ProblemDetails "title" field the frontend's toAppError already reads
+            // for non-4xx-mapped statuses — giving the user this exact message
+            // instead of a generic "Something went wrong."
+            return Results.Problem(
+                title: "An account with this email already exists.",
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
+        var user = new User
+        {
+            Email = email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password)
+        };
+        db.Users.Add(user);
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // The pre-check above already caught the common case; this only fires when
+            // two registrations for the same email race each other past that check —
+            // the unique index (QuotesDbContext) is what actually stops the duplicate.
+            return Results.Problem(
+                title: "An account with this email already exists.",
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
+        return Results.Json(
+            new { id = user.Id, email = user.Email },
+            statusCode: StatusCodes.Status201Created);
+    });
+
 // LOGIN
 app.MapPost(
     "/api/auth/login",

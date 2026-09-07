@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { LoginRequest, TokenResponse } from '../models/auth.models';
+import { LoginRequest, RegisterRequest, TokenResponse } from '../models/auth.models';
 import { API_BASE_URL } from '../api-base-url';
 import { AppError } from '../models/app-error.models';
 
@@ -50,6 +50,10 @@ export class Auth {
   readonly accessToken = signal<string | null>(readStoredToken());
   readonly loginPending = signal(false);
   readonly loginError = signal<string | null>(null);
+
+  readonly registerPending = signal(false);
+  readonly registerError = signal<string | null>(null);
+  readonly registerSuccess = signal(false);
 
   private readonly decodedToken = computed(() => {
     const token = this.accessToken();
@@ -109,6 +113,29 @@ export class Auth {
           err.kind === 'unauthorized' ? 'Invalid email or password.' : 'Login failed. Please try again.',
         );
         this.loginPending.set(false);
+      },
+    });
+  }
+
+  // POST /api/auth/register (Program.cs) creates the account but does not log the user
+  // in — it returns no token, unlike /api/auth/login. registerSuccess is what the
+  // Register page watches to navigate to /login once the account actually exists.
+  register(request: RegisterRequest): void {
+    this.registerPending.set(true);
+    this.registerError.set(null);
+    this.registerSuccess.set(false);
+
+    this.http.post(`${API_BASE_URL}/api/auth/register`, request).subscribe({
+      next: () => {
+        this.registerPending.set(false);
+        this.registerSuccess.set(true);
+      },
+      error: (err: AppError) => {
+        // Every AppError variant already carries a ready-to-render message (validation:
+        // the specific field error; 409 conflict: the backend's "already exists" title;
+        // network/server: a safe generic message) — no extra mapping needed here.
+        this.registerError.set(err.message);
+        this.registerPending.set(false);
       },
     });
   }

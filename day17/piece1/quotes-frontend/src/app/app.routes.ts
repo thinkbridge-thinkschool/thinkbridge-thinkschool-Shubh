@@ -7,6 +7,12 @@ import { QuotesPage } from './features/quotes/quotes-page/quotes-page';
 export const routes: Routes = [
   { path: 'login', component: Login },
   {
+    path: 'register',
+    // Lazy-loaded: registration is a one-time detour off the login path, not
+    // something every visitor needs in the initial bundle.
+    loadComponent: () => import('./features/register/register').then((m) => m.Register),
+  },
+  {
     path: '',
     component: Shell,
     canActivate: [authGuard],

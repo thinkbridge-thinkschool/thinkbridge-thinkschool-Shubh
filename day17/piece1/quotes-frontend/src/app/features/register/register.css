@@ -80,14 +80,6 @@
   font-size: 0.9rem;
 }
 
-.hint {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  background: var(--color-bg-raised);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.65rem;
-}
-
 .auth-card__footer {
   text-align: center;
   font-size: 0.85rem;

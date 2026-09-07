@@ -9,11 +9,9 @@
 
     <form class="card auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="auth-card__header">
-        <h2 class="auth-card__title">Welcome back</h2>
-        <p class="auth-card__subtitle">Sign in to create and manage quotes.</p>
+        <h2 class="auth-card__title">Create an account</h2>
+        <p class="auth-card__subtitle">Register to start creating and managing quotes.</p>
       </div>
-
-      <p class="hint">Use a seeded QuotesApi account, e.g. test&#64;example.com.</p>
 
       <div class="field">
         <label class="field__label" for="email">Email</label>
@@ -40,7 +38,7 @@
           class="input"
           type="password"
           formControlName="password"
-          autocomplete="current-password"
+          autocomplete="new-password"
           [attr.aria-invalid]="fieldError('password') ? true : null"
           [attr.aria-describedby]="describedBy('password')"
         />
@@ -49,24 +47,41 @@
         }
       </div>
 
-      <button type="submit" class="btn btn--primary btn--block" [disabled]="auth.loginPending()">
-        @switch (auth.loginPending()) {
+      <div class="field">
+        <label class="field__label" for="confirmPassword">Confirm password</label>
+        <input
+          id="confirmPassword"
+          #confirmPasswordInput
+          class="input"
+          type="password"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          [attr.aria-invalid]="fieldError('confirmPassword') ? true : null"
+          [attr.aria-describedby]="describedBy('confirmPassword')"
+        />
+        @if (fieldError('confirmPassword'); as message) {
+          <p id="confirmPassword-error" class="field-error">{{ message }}</p>
+        }
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block" [disabled]="auth.registerPending()">
+        @switch (auth.registerPending()) {
           @case (true) {
             <span class="spinner spinner--inline" aria-hidden="true"></span>
-            Signing in…
+            Creating account…
           }
           @default {
-            Log in
+            Create account
           }
         }
       </button>
 
-      @if (auth.loginError()) {
-        <p class="alert alert--error" role="alert">{{ auth.loginError() }}</p>
+      @if (auth.registerError()) {
+        <p class="alert alert--error" role="alert">{{ auth.registerError() }}</p>
       }
 
       <p class="auth-card__footer">
-        Don't have an account? <a routerLink="/register">Register</a>
+        Already have an account? <a routerLink="/login">Log in</a>
       </p>
     </form>
   </div>

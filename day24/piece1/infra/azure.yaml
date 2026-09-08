@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: quotes-api-day24-piece1
+metadata:
+  template: quotes-api-day24-piece1@0.1.0
+
+# Infra/IaC only — no application build or deploy is in scope for Day 24, so there is
+# deliberately no `services:` section. `azd provision` (not `azd up`/`azd deploy`) is the
+# command used throughout this exercise.
+infra:
+  provider: bicep
+  path: .
+  module: main

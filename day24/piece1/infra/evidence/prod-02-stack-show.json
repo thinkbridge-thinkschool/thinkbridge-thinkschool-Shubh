@@ -1,0 +1,269 @@
+{
+  "actionOnUnmanage": {
+    "managementGroups": "delete",
+    "resourceGroups": "delete",
+    "resources": "delete",
+    "resourcesWithoutDeleteSupport": "fail"
+  },
+  "bypassStackOutOfSyncError": null,
+  "correlationId": "ba07566d-f3a2-880b-e564-79e1f33f898e",
+  "debugSetting": null,
+  "deletedResources": [],
+  "denySettings": {
+    "applyToChildScopes": false,
+    "excludedActions": [],
+    "excludedPrincipals": [],
+    "mode": "none"
+  },
+  "deploymentExtensions": [],
+  "deploymentId": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/providers/Microsoft.Resources/deployments/azd-stack-prod-26090804fshig",
+  "deploymentScope": null,
+  "description": null,
+  "detachedResources": [],
+  "duration": "PT3M2.073503S",
+  "error": null,
+  "extensionConfigs": null,
+  "externalInputDefinitions": null,
+  "externalInputs": null,
+  "failedResources": [],
+  "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/providers/Microsoft.Resources/deploymentStacks/azd-stack-prod",
+  "location": "eastasia",
+  "name": "azd-stack-prod",
+  "outputs": {
+    "azurE_RESOURCE_GROUP": {
+      "type": "String",
+      "value": "rg-day24-piece1-prod"
+    },
+    "containerAppFqdn": {
+      "type": "String",
+      "value": "ca-quotesapi-day24-prod.bluemoss-72267de6.eastasia.azurecontainerapps.io"
+    },
+    "containerAppName": {
+      "type": "String",
+      "value": "ca-quotesapi-day24-prod"
+    },
+    "serviceBusEndpoint": {
+      "type": "String",
+      "value": "sb-day24-prod-shubh2026.servicebus.windows.net"
+    },
+    "serviceBusNamespaceName": {
+      "type": "String",
+      "value": "sb-day24-prod-shubh2026"
+    },
+    "serviceBusTopicName": {
+      "type": "String",
+      "value": "quote-events"
+    },
+    "sqlDatabaseName": {
+      "type": "String",
+      "value": "quotesdb"
+    },
+    "sqlServerFqdn": {
+      "type": "String",
+      "value": "sql-day24-prod-shubh2026.database.windows.net"
+    },
+    "sqlServerName": {
+      "type": "String",
+      "value": "sql-day24-prod-shubh2026"
+    }
+  },
+  "parameters": {
+    "containerCpu": {
+      "expression": null,
+      "reference": null,
+      "type": "string",
+      "value": "1.0"
+    },
+    "containerMemory": {
+      "expression": null,
+      "reference": null,
+      "type": "string",
+      "value": "2.0Gi"
+    },
+    "environmentName": {
+      "expression": null,
+      "reference": null,
+      "type": "string",
+      "value": "prod"
+    },
+    "location": {
+      "expression": null,
+      "reference": null,
+      "type": "string",
+      "value": "eastasia"
+    },
+    "maxReplicas": {
+      "expression": null,
+      "reference": null,
+      "type": "int",
+      "value": 10
+    },
+    "minReplicas": {
+      "expression": null,
+      "reference": null,
+      "type": "int",
+      "value": 2
+    },
+    "serviceBusZoneRedundant": {
+      "expression": null,
+      "reference": null,
+      "type": "bool",
+      "value": true
+    },
+    "sqlAdministratorLoginPassword": {
+      "expression": null,
+      "reference": null,
+      "type": "securestring",
+      "value": ""
+    },
+    "sqlAutoPauseDelayMinutes": {
+      "expression": null,
+      "reference": null,
+      "type": "int",
+      "value": -1
+    },
+    "sqlMinCapacity": {
+      "expression": null,
+      "reference": null,
+      "type": "string",
+      "value": "1"
+    },
+    "sqlSkuCapacity": {
+      "expression": null,
+      "reference": null,
+      "type": "int",
+      "value": 2
+    }
+  },
+  "parametersLink": null,
+  "provisioningState": "succeeded",
+  "resources": [
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod",
+      "identifiers": null,
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.App/containerApps/ca-quotesapi-day24-prod",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-ca-quotesapi-day24-prod",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.ServiceBus/namespaces/sb-day24-prod-shubh2026",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.ServiceBus/namespaces/sb-day24-prod-shubh2026/providers/Microsoft.Authorization/roleAssignments/cf050a71-a68b-55b1-8e80-ad947987d7bb",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.ServiceBus/namespaces/sb-day24-prod-shubh2026/topics/quote-events",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.ServiceBus/namespaces/sb-day24-prod-shubh2026/topics/quote-events/subscriptions/sub-a",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.ServiceBus/namespaces/sb-day24-prod-shubh2026/topics/quote-events/subscriptions/sub-b",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.Sql/servers/sql-day24-prod-shubh2026",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.Sql/servers/sql-day24-prod-shubh2026/databases/quotesdb",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    },
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day24-piece1-prod/providers/Microsoft.Sql/servers/sql-day24-prod-shubh2026/firewallRules/AllowAllWindowsAzureIps",
+      "identifiers": null,
+      "resourceGroup": "rg-day24-piece1-prod",
+      "status": "managed",
+      "type": null
+    }
+  ],
+  "systemData": {
+    "createdAt": "2026-09-08T04:53:56.421428+00:00",
+    "createdBy": "shubh.rastogi2@s.amity.edu",
+    "createdByType": "User",
+    "lastModifiedAt": "2026-09-08T04:53:56.421428+00:00",
+    "lastModifiedBy": "shubh.rastogi2@s.amity.edu",
+    "lastModifiedByType": "User"
+  },
+  "tags": {
+    "azd-env-name": "prod",
+    "azd-layer-name": "",
+    "azd-provision-param-hash": "04a8dddcc5b5cd5c6d208d9b2f2f0478bbcca1fb61b26ea75ac7cec61877f40d",
+    "azd-provision-template-hash": "6897495137901012922"
+  },
+  "template": null,
+  "templateLink": null,
+  "type": "Microsoft.Resources/deploymentStacks",
+  "validationLevel": null
+}

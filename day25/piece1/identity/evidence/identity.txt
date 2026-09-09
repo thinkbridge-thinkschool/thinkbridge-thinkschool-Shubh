@@ -1,0 +1,17 @@
+=== Managed Identity ===
+{
+  "principalId": "64995ec1-4a53-4225-b686-b174f2c72ed7",
+  "tenantId": "8d46a076-d093-416d-a57b-8692cde13bf8",
+  "type": "SystemAssigned",
+  "userAssignedIdentities": null
+}
+
+=== Service principal (Entra ID object backing the identity) ===
+{
+  "appId": "69644f42-6325-46fa-a8f4-4b51f97c31a4",
+  "displayName": "app-day25-identity-shubh2026",
+  "servicePrincipalType": "ManagedIdentity"
+}
+
+=== Web App resource ID ===
+/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day25-piece1/providers/Microsoft.Web/sites/app-day25-identity-shubh2026

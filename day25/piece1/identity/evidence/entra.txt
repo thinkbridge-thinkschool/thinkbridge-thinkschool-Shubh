@@ -1,0 +1,42 @@
+=== Microsoft Entra ID application authentication configuration ===
+
+Tenant ID:            8d46a076-d093-416d-a57b-8692cde13bf8   (Amity University tenant)
+App registration:     day25-quotesapi-identity
+Client ID (App ID):   3a8d11f8-0721-4cc5-88db-a138235eb472
+Object ID (app):      6b15b58f-da7e-40d1-bdca-bd4034c6e5e4
+Service principal ID: 213890d1-bee9-4960-9ca8-4641d8198c79
+Application ID URI:   api://3a8d11f8-0721-4cc5-88db-a138235eb472
+Exposed scope:        quotes.access (delegated, admin+user consent both configured)
+Sign-in audience:     AzureADMyOrg (single tenant)
+Client secret:        NONE -- the API only validates incoming tokens (issuer + audience),
+                       which requires no secret at all. No client secret was ever created.
+
+Issuer (expected):    https://login.microsoftonline.com/8d46a076-d093-416d-a57b-8692cde13bf8/v2.0
+Audience (expected):  api://3a8d11f8-0721-4cc5-88db-a138235eb472
+
+Protected API behavior (api/Program.cs):
+  - A single "Smart" policy scheme inspects the incoming bearer token's `iss` claim and
+    routes to one of two JwtBearer handlers:
+      * "SelfJwt" -- this API's own symmetric-key JWT (signing key from Key Vault)
+      * "Entra"   -- validates a real Microsoft Entra ID token against the tenant/audience
+                     above (Authority = https://login.microsoftonline.com/<tenantId>/v2.0)
+  - GET /api/whoami, GET /api/secure/sql-ping, POST /api/secure/servicebus-ping all require
+    authorization and work identically regardless of which scheme validated the token.
+  - Verified live without a token: all three return HTTP 401 (see app-settings.txt / README).
+  - Verified live with a SelfJwt token: all three return HTTP 200 (see README "Verification").
+
+Verified in this session:
+  - App registration, service principal, Application ID URI, and exposed scope: created and
+    confirmed via `az ad app show` / `az ad sp show` (real, live in the tenant).
+  - SelfJwt path: confirmed end-to-end (issued a token, called the live App Service, got 200s).
+
+NOT verified in this session (documented honestly, not claimed):
+  - Acquiring a REAL Microsoft Entra ID access token for this app's `quotes.access` scope and
+    calling the API with it. `az account get-access-token --scope api://<clientId>/quotes.access`
+    failed with AADSTS65001 (consent_required) -- the Amity University tenant requires
+    interactive user consent or a tenant admin's consent grant for a new app registration, and
+    `az ad app permission admin-consent` was attempted and rejected with 403
+    Authorization_RequestDenied ("This operation can only be performed by an administrator").
+    The signed-in account (a student user) is not a tenant admin. The "Entra" JwtBearer handler
+    is correctly configured and would accept a real token, but that specific request/response
+    was not exercised end-to-end here. See README "Limitations".

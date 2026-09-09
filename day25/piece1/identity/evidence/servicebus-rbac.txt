@@ -1,0 +1,28 @@
+=== Service Bus queue-scoped RBAC role assignments (managed identity only) ===
+[
+  {
+    "principalId": "64995ec1-4a53-4225-b686-b174f2c72ed7",
+    "principalType": "ServicePrincipal",
+    "role": "Azure Service Bus Data Sender"
+  },
+  {
+    "principalId": "64995ec1-4a53-4225-b686-b174f2c72ed7",
+    "principalType": "ServicePrincipal",
+    "role": "Azure Service Bus Data Receiver"
+  }
+]
+
+=== No SAS / connection string authorization rules exist on the namespace ===
+[
+  "RootManageSharedAccessKey"
+]
+(only the built-in 'RootManageSharedAccessKey' rule exists by default; the app never references it or its keys anywhere)
+
+=== Live verification: message count after POST /api/secure/servicebus-ping ===
+{
+  "activeMessageCount": 1,
+  "deadLetterMessageCount": 0,
+  "scheduledMessageCount": 0,
+  "transferDeadLetterMessageCount": 0,
+  "transferMessageCount": 0
+}

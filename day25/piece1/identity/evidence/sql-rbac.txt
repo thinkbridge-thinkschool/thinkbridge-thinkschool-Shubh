@@ -1,0 +1,44 @@
+=== SQL server Entra-only auth admin ===
+[
+  {
+    "administratorType": "ActiveDirectory",
+    "azureAdOnlyAuthentication": true,
+    "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day25-piece1/providers/Microsoft.Sql/servers/sql-day25-shubh2026/administrators/ActiveDirectory",
+    "login": "shubh.rastogi2@s.amity.edu",
+    "name": "ActiveDirectory",
+    "resourceGroup": "rg-day25-piece1",
+    "sid": "02d07c6e-13c4-4036-9eb6-c347193ab404",
+    "tenantId": "8d46a076-d093-416d-a57b-8692cde13bf8",
+    "type": "Microsoft.Sql/servers"
+  }
+]
+
+=== Azure AD only auth enforced? ===
+{
+  "azureAdOnlyAuthentication": true,
+  "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day25-piece1/providers/Microsoft.Sql/servers/sql-day25-shubh2026/azureADOnlyAuthentications/Default",
+  "name": "Default",
+  "resourceGroup": "rg-day25-piece1",
+  "type": "Microsoft.Sql/servers"
+}
+
+=== SQL server login/password auth present? ===
+{
+  "administratorLogin": "CloudSAbd91f825",
+  "minimalTlsVersion": "1.2"
+}
+
+=== Contained database user + role membership for the API's managed identity ===
+(created via a one-time T-SQL script run as the Entra admin -- see scripts/sql-grant/)
+CREATE USER [app-day25-identity-shubh2026] FROM EXTERNAL PROVIDER;
+ALTER ROLE db_datareader ADD MEMBER [app-day25-identity-shubh2026];
+ALTER ROLE db_datawriter ADD MEMBER [app-day25-identity-shubh2026];
+-- verified live: GET /api/secure/sql-ping returned connectedAs = <app clientId>@<tenantId>, proving the app authenticated to Azure SQL as its own managed identity, not a SQL login.
+
+NOTE on "administratorLogin": "CloudSAbd91f825"
+Azure auto-populates this field with a random placeholder even when the server is created
+AAD-only (no administratorLogin/administratorLoginPassword was ever supplied in
+infra/modules/sql.bicep -- see that file). It has NO password and cannot be used: the
+"Azure AD only auth enforced" check above confirms azureAdOnlyAuthentication: true, which
+Microsoft documents as rejecting all SQL-authentication logins at the server level,
+placeholder included.

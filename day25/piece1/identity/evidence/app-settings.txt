@@ -1,0 +1,79 @@
+=== App Service application settings (full list -- zero plaintext secrets) ===
+[
+  {
+    "name": "Sql__Server",
+    "slotSetting": false,
+    "value": "sql-day25-shubh2026.database.windows.net"
+  },
+  {
+    "name": "Sql__Database",
+    "slotSetting": false,
+    "value": "identitydb"
+  },
+  {
+    "name": "ServiceBus__Namespace",
+    "slotSetting": false,
+    "value": "sb-day25-shubh2026.servicebus.windows.net"
+  },
+  {
+    "name": "ServiceBus__QueueName",
+    "slotSetting": false,
+    "value": "identity-queue"
+  },
+  {
+    "name": "KeyVault__Uri",
+    "slotSetting": false,
+    "value": "https://kv-day25-shubh2026.vault.azure.net/"
+  },
+  {
+    "name": "Entra__TenantId",
+    "slotSetting": false,
+    "value": "8d46a076-d093-416d-a57b-8692cde13bf8"
+  },
+  {
+    "name": "Entra__ClientId",
+    "slotSetting": false,
+    "value": "3a8d11f8-0721-4cc5-88db-a138235eb472"
+  },
+  {
+    "name": "Entra__Audience",
+    "slotSetting": false,
+    "value": "api://3a8d11f8-0721-4cc5-88db-a138235eb472"
+  },
+  {
+    "name": "Jwt__Issuer",
+    "slotSetting": false,
+    "value": "QuotesIdentityApi"
+  },
+  {
+    "name": "Jwt__Audience",
+    "slotSetting": false,
+    "value": "QuotesIdentityApiClient"
+  },
+  {
+    "name": "Jwt__ExpiresInMinutes",
+    "slotSetting": false,
+    "value": "15"
+  },
+  {
+    "name": "Jwt__Key",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(SecretUri=https://kv-day25-shubh2026.vault.azure.net/secrets/jwt-signing-key/)"
+  }
+]
+
+=== Connection strings tab (must be empty) ===
+[]
+
+=== Grep check across all setting values for password/pwd/secret-shaped strings ===
+none found
+
+=== Live proof: protected endpoints reject unauthenticated requests ===
+GET  /api/whoami                -> HTTP 401 (no token)
+GET  /api/secure/sql-ping       -> HTTP 401 (no token)
+
+=== Live proof: protected endpoints succeed with a valid token, using MI end-to-end ===
+GET  /api/whoami                -> HTTP 200 {"isAuthenticated":true,...}
+GET  /api/secure/sql-ping       -> HTTP 200 {"connectedAs":"69644f42-6325-46fa-a8f4-4b51f97c31a4@8d46a076-d093-416d-a57b-8692cde13bf8","database":"identitydb"}
+     (connectedAs is the App Service managed identity's own appId@tenantId -- not a SQL login)
+POST /api/secure/servicebus-ping -> HTTP 200 {"sent":true,"queue":"identity-queue"}

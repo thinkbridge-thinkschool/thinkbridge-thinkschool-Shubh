@@ -1,0 +1,39 @@
+=== Key Vault: RBAC mode, no access policies ===
+{
+  "enableRbacAuthorization": true,
+  "enableSoftDelete": true
+}
+
+=== Key Vault RBAC role assignments ===
+[
+  {
+    "principalId": "64995ec1-4a53-4225-b686-b174f2c72ed7",
+    "principalType": "ServicePrincipal",
+    "role": "Key Vault Secrets User"
+  },
+  {
+    "principalId": "02d07c6e-13c4-4036-9eb6-c347193ab404",
+    "principalType": "User",
+    "role": "Key Vault Secrets Officer"
+  }
+]
+
+=== Secrets stored (names only -- values never retrieved or printed) ===
+[
+  {
+    "enabled": true,
+    "name": "jwt-signing-key"
+  }
+]
+
+=== App Service setting that references it (Jwt__Key) ===
+[
+  {
+    "name": "Jwt__Key",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(SecretUri=https://kv-day25-shubh2026.vault.azure.net/secrets/jwt-signing-key/)"
+  }
+]
+
+Format: @Microsoft.KeyVault(SecretUri=https://kv-day25-shubh2026.vault.azure.net/secrets/jwt-signing-key/)
+This is a reference string, not the secret value -- App Service resolves it server-side using the app's own managed identity + its 'Key Vault Secrets User' role grant above.

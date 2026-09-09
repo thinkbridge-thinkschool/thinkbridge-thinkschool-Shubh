@@ -1,0 +1,7 @@
+bin/
+obj/
+publish/
+*.zip
+appsettings.Development.json
+.env
+*.user

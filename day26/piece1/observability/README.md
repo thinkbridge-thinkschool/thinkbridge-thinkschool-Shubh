@@ -595,7 +595,3 @@ These require the Azure Portal UI and were not captured automatically:
   persistence), but worth knowing before treating this deployment as anything
   beyond an observability demo.
 
-## Git
-
-Nothing has been committed or pushed. All Day 26 work is untracked, new content
-under `day26/`. See the final report for the exact file list.

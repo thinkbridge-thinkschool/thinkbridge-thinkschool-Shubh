@@ -1,0 +1,28 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "timestamp",
+          "type": "datetime"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "operation_Id",
+          "type": "string"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          "2026-09-10T05:39:02.4750695Z",
+          "POST api/background-jobs",
+          "456359966323ce9b2256b9a8c45a074c"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "Total",
+          "type": "long"
+        },
+        {
+          "name": "Failed",
+          "type": "long"
+        },
+        {
+          "name": "ErrorRatePercent",
+          "type": "real"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          9,
+          1,
+          11.11
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "target",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "Calls",
+          "type": "long"
+        },
+        {
+          "name": "Failed",
+          "type": "long"
+        },
+        {
+          "name": "AvgDuration",
+          "type": "real"
+        },
+        {
+          "name": "P99",
+          "type": "real"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          "Users | main",
+          "sqlite",
+          "main",
+          78,
+          0,
+          3.6902512820512823,
+          182.8793
+        ],
+        [
+          "compute-recommendations",
+          "InProc",
+          "compute-recommendations",
+          2,
+          0,
+          66.39150000000001,
+          110.8258
+        ],
+        [
+          "background-job.process",
+          "InProc",
+          "background-job.process",
+          1,
+          0,
+          2032.9126,
+          2032.9126
+        ],
+        [
+          "DefaultAzureCredential.GetToken",
+          "InProc | Microsoft.AAD",
+          "DefaultAzureCredential.GetToken",
+          1,
+          0,
+          3774.8844,
+          3774.8844
+        ]
+      ]
+    }
+  ]
+}

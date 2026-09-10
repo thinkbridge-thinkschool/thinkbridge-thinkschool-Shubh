@@ -1,0 +1,57 @@
+{
+  "extendedLocation": null,
+  "id": "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day26-piece1-observability/providers/microsoft.insights/scheduledqueryrules/alert-day26-error-rate",
+  "identity": null,
+  "kind": null,
+  "location": "eastasia",
+  "managedBy": null,
+  "name": "alert-day26-error-rate",
+  "plan": null,
+  "properties": {
+    "actions": {
+      "actionGroups": [
+        "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day26-piece1-observability/providers/Microsoft.Insights/actionGroups/ag-day26-errorrate"
+      ]
+    },
+    "createdWithApiVersion": "2023-03-15-preview",
+    "criteria": {
+      "allOf": [
+        {
+          "failingPeriods": {
+            "minFailingPeriodsToAlert": 1,
+            "numberOfEvaluationPeriods": 1
+          },
+          "metricMeasureColumn": "ErrorRatePercent",
+          "operator": "GreaterThan",
+          "query": "requests | summarize Total = count(), Failed = countif(success == false) | extend ErrorRatePercent = iff(Total == 0, 0.0, 100.0 * Failed / Total)",
+          "threshold": 5.0,
+          "timeAggregation": "Maximum"
+        }
+      ]
+    },
+    "description": "Fires when the percentage of failed requests to QuotesApi exceeds 5% over a 15 minute window.",
+    "displayName": "Day 26 - QuotesApi error rate > 5%",
+    "enabled": true,
+    "evaluationFrequency": "PT5M",
+    "scopes": [
+      "/subscriptions/4d89877c-3cf4-491f-b999-03c9ff6bc7c3/resourceGroups/rg-day26-piece1-observability/providers/Microsoft.Insights/components/appi-day26-piece1"
+    ],
+    "severity": 2,
+    "windowSize": "PT15M"
+  },
+  "resourceGroup": "rg-day26-piece1-observability",
+  "sku": null,
+  "systemData": {
+    "createdAt": "2026-09-10T05:27:34.3603106Z",
+    "createdBy": "shubh.rastogi2@s.amity.edu",
+    "createdByType": "User",
+    "lastModifiedAt": "2026-09-10T05:27:34.3603106Z",
+    "lastModifiedBy": "shubh.rastogi2@s.amity.edu",
+    "lastModifiedByType": "User"
+  },
+  "tags": {
+    "day": "26",
+    "purpose": "observability-demo"
+  },
+  "type": "Microsoft.Insights/scheduledQueryRules"
+}

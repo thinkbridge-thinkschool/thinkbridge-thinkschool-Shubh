@@ -1,0 +1,33 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "timestamp",
+          "type": "datetime"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "operation_Id",
+          "type": "string"
+        },
+        {
+          "name": "operation_ParentId",
+          "type": "string"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          "2026-09-10T05:39:02.7908674Z",
+          "background-job.process",
+          "09558b4a68d774f247c390478298524a",
+          "09558b4a68d774f247c390478298524a"
+        ]
+      ]
+    }
+  ]
+}

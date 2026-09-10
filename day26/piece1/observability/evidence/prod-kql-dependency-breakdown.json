@@ -1,0 +1,66 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "target",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "Calls",
+          "type": "long"
+        },
+        {
+          "name": "Failed",
+          "type": "long"
+        },
+        {
+          "name": "AvgDuration",
+          "type": "real"
+        },
+        {
+          "name": "P99",
+          "type": "real"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          "/tmp/quotes.db | main",
+          "sqlite",
+          "main",
+          15,
+          0,
+          2.1876466666666667,
+          23.9518
+        ],
+        [
+          "background-job.process",
+          "InProc",
+          "background-job.process",
+          2,
+          0,
+          2012.9313,
+          2023.3008
+        ],
+        [
+          "compute-recommendations",
+          "InProc",
+          "compute-recommendations",
+          2,
+          0,
+          62.28515,
+          111.7111
+        ]
+      ]
+    }
+  ]
+}

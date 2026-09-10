@@ -1,0 +1,73 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "timestamp",
+          "type": "datetime"
+        },
+        {
+          "name": "itemType",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "target",
+          "type": "string"
+        },
+        {
+          "name": "duration",
+          "type": "real"
+        },
+        {
+          "name": "operation_Id",
+          "type": "string"
+        },
+        {
+          "name": "operation_ParentId",
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          "2026-09-10T05:31:16.4230974Z",
+          "request",
+          "POST api/background-jobs",
+          "",
+          64.7333,
+          "072d262cad5368520e2ddfac4db305f5",
+          "072d262cad5368520e2ddfac4db305f5",
+          "c781164429b917c5"
+        ],
+        [
+          "2026-09-10T05:31:16.4823576Z",
+          "dependency",
+          "background-job.process",
+          "background-job.process",
+          2032.9126,
+          "072d262cad5368520e2ddfac4db305f5",
+          "c781164429b917c5",
+          "a5f74c5214b37241"
+        ],
+        [
+          "2026-09-10T05:31:16.521402Z",
+          "dependency",
+          "main",
+          "Users | main",
+          0.6708,
+          "072d262cad5368520e2ddfac4db305f5",
+          "a5f74c5214b37241",
+          "53d7544dec6607a1"
+        ]
+      ]
+    }
+  ]
+}

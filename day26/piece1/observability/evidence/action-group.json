@@ -1,0 +1,31 @@
+{
+  "armRoleReceivers": [],
+  "automationRunbookReceivers": [],
+  "azureAppPushReceivers": [],
+  "azureFunctionReceivers": [],
+  "emailReceivers": [
+    {
+      "emailAddress": "shubhrastogi725@gmail.com",
+      "name": "demo-owner",
+      "status": "Enabled",
+      "useCommonAlertSchema": true
+    }
+  ],
+  "enabled": true,
+  "eventHubReceivers": [],
+  "groupShortName": "day26err",
+  "id": "/subscriptions/4D89877C-3CF4-491F-B999-03C9FF6BC7C3/resourceGroups/rg-day26-piece1-observability/providers/microsoft.insights/actionGroups/ag-day26-errorrate",
+  "itsmReceivers": [],
+  "location": "Global",
+  "logicAppReceivers": [],
+  "name": "ag-day26-errorrate",
+  "resourceGroup": "rg-day26-piece1-observability",
+  "smsReceivers": [],
+  "tags": {
+    "day": "26",
+    "purpose": "observability-demo"
+  },
+  "type": "Microsoft.Insights/ActionGroups",
+  "voiceReceivers": [],
+  "webhookReceivers": []
+}

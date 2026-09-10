@@ -1,0 +1,75 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "RequestCount",
+          "type": "long"
+        },
+        {
+          "name": "P50",
+          "type": "real"
+        },
+        {
+          "name": "P99",
+          "type": "real"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          "POST /api/auth/register",
+          1,
+          1807.0856,
+          1807.0856
+        ],
+        [
+          "POST /api/auth/login",
+          1,
+          697.934,
+          697.934
+        ],
+        [
+          "GET /api/quotes",
+          4,
+          4.6504,
+          294.6859
+        ],
+        [
+          "POST /api/quotes",
+          2,
+          16.1025,
+          152.8471
+        ],
+        [
+          "POST api/background-jobs",
+          2,
+          1.869,
+          77.9463
+        ],
+        [
+          "GET demo/success",
+          3,
+          1.2432,
+          5.8215
+        ],
+        [
+          "GET demo/failure",
+          2,
+          0.7845,
+          2.9025
+        ],
+        [
+          "GET /",
+          1,
+          1.2462,
+          1.2462
+        ]
+      ]
+    }
+  ]
+}

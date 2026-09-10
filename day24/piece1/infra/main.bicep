@@ -6,6 +6,7 @@
 // it. That is what gives Day 24 "clean teardown" as a first-class property: deleting the stack
 // can delete the resource group and everything in it, with nothing left to clean up by hand.
 //
+
 // Each azd environment (dev / prod) maps to its own isolated resource group
 // (rg-day24-piece1-<environmentName>), so Day 24 never touches the Day 23 resource groups or
 // the shared resources in rg-quotes-api.

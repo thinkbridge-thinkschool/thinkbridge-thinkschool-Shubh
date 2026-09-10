@@ -1,0 +1,80 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "timestamp",
+          "type": "datetime"
+        },
+        {
+          "name": "itemType",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "target",
+          "type": "string"
+        },
+        {
+          "name": "duration",
+          "type": "real"
+        },
+        {
+          "name": "cloud_RoleInstance",
+          "type": "string"
+        },
+        {
+          "name": "operation_Id",
+          "type": "string"
+        },
+        {
+          "name": "operation_ParentId",
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ],
+      "name": "PrimaryResult",
+      "rows": [
+        [
+          "2026-09-10T06:05:41.853663Z",
+          "request",
+          "POST api/background-jobs",
+          "",
+          1.869,
+          "quotes-api-day26-observability--1zjthwf-5d7459c87-kgxm2",
+          "9bfdb3d91e8478fc554560a83ff72f11",
+          "9bfdb3d91e8478fc554560a83ff72f11",
+          "8cdc88fa2254c3f7"
+        ],
+        [
+          "2026-09-10T06:05:43.3665787Z",
+          "dependency",
+          "background-job.process",
+          "background-job.process",
+          2002.5618,
+          "quotes-api-day26-observability--1zjthwf-5d7459c87-kgxm2",
+          "9bfdb3d91e8478fc554560a83ff72f11",
+          "8cdc88fa2254c3f7",
+          "0bcac89e80516d5d"
+        ],
+        [
+          "2026-09-10T06:05:43.3676574Z",
+          "dependency",
+          "main",
+          "/tmp/quotes.db | main",
+          0.381,
+          "quotes-api-day26-observability--1zjthwf-5d7459c87-kgxm2",
+          "9bfdb3d91e8478fc554560a83ff72f11",
+          "0bcac89e80516d5d",
+          "9b3f10cb784b9790"
+        ]
+      ]
+    }
+  ]
+}

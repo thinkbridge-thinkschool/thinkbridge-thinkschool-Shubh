@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>QuotesApi.Shared</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Gives this class library access to ASP.NET Core types (Controllers, HttpContext,
+         IEndpointRouteBuilder) without hosting overhead — Host is the only project that
+         actually hosts the pipeline. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Microsoft.NET.Sdk.Web injects these as implicit global usings; a plain class
+         library (Microsoft.NET.Sdk) does not, so they're added explicitly here to match
+         the ASP.NET Core code style the original single-project app was written in. -->
+    <Using Include="Microsoft.AspNetCore.Builder" />
+    <Using Include="Microsoft.AspNetCore.Http" />
+    <Using Include="Microsoft.AspNetCore.Routing" />
+    <Using Include="Microsoft.Extensions.Configuration" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Extensions.Hosting" />
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.9.0" />
+  </ItemGroup>
+
+</Project>

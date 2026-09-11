@@ -1,0 +1,7 @@
+bin/
+obj/
+.azure/
+.claude/
+.git/
+quotes.db
+*.db

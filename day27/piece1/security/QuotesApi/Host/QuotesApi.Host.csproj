@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>24b6aead-3f5c-412d-b35f-d3e0a1005d28</UserSecretsId>
+    <!-- Keeps the published assembly named QuotesApi.dll so the existing Dockerfile
+         ENTRYPOINT and azd deployment wiring keep working unchanged. -->
+    <AssemblyName>QuotesApi</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.17.0-beta.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Host is the only project every module and Shared may be referenced from — the one
+         deployable process this modular monolith assembles into. -->
+    <ProjectReference Include="..\Modules\Quotes\QuotesApi.Modules.Quotes.csproj" />
+    <ProjectReference Include="..\Modules\Identity\QuotesApi.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\QuotesApi.Modules.Notifications.csproj" />
+    <ProjectReference Include="..\Shared\QuotesApi.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

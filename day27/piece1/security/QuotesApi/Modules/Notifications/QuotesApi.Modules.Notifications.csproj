@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>QuotesApi.Modules.Notifications</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Microsoft.NET.Sdk.Web injects these as implicit global usings; a plain class
+         library (Microsoft.NET.Sdk) does not, so they're added explicitly here to match
+         the ASP.NET Core code style the original single-project app was written in. -->
+    <Using Include="Microsoft.AspNetCore.Builder" />
+    <Using Include="Microsoft.AspNetCore.Http" />
+    <Using Include="Microsoft.AspNetCore.Routing" />
+    <Using Include="Microsoft.Extensions.Configuration" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Extensions.Hosting" />
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Notifications depends on Shared only — never on Quotes or Identity directly. It
+         learns about a QuoteCreated event only through the Shared contract/event pair
+         (IIntegrationEventWriter / QuoteCreatedEvent), never through Quotes' own types. -->
+    <ProjectReference Include="..\..\Shared\QuotesApi.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -4,6 +4,7 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Context;
 using System.Diagnostics;
+using QuotesApi.Host.OpenApi;
 using QuotesApi.Modules.Identity;
 using QuotesApi.Modules.Identity.Api;
 using QuotesApi.Modules.Notifications;
@@ -16,6 +17,10 @@ using QuotesApi.Shared.Infrastructure.Persistence;
 using QuotesApi.Shared.Infrastructure.Telemetry;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Day 27: stop Kestrel advertising "Server: Kestrel" on every response — a small but free
+// reduction in what an attacker learns about the stack from the outside.
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 // Composition root: each module wires its own services; Host only bootstraps cross-cutting
 // concerns (logging, tracing, CORS) and the ASP.NET Core pipeline itself.
@@ -79,6 +84,16 @@ builder.Services.AddControllers()
     .AddApplicationPart(typeof(BackgroundJobsController).Assembly)
     .AddApplicationPart(typeof(DemoDependencyController).Assembly);
 
+// Day 27 — OpenAPI document (Microsoft.AspNetCore.OpenApi, built into the SDK): reflects the
+// real JWT bearer requirement on protected routes via the two transformers below, and never
+// serializes the JWT signing key or any other secret (those never enter route/DTO metadata
+// to begin with).
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.AddOperationTransformer<RequireBearerOperationTransformer>();
+});
+
 var app = builder.Build();
 
 // A fresh database (see the SQLite Data Source in Shared/SharedModuleExtensions.cs) has no
@@ -102,6 +117,10 @@ app.Use(async (ctx, next) =>
     }
 });
 
+// Registered before ExceptionMiddleware so its OnStarting hook is armed even when a request
+// ends in the generic 500 that middleware produces — every response gets the headers, not
+// just the successful ones.
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors(angularDevCorsPolicy);
 app.UseAuthentication();
@@ -110,6 +129,11 @@ app.MapControllers();
 
 app.MapQuoteEndpoints();
 app.MapIdentityEndpoints();
+
+// /openapi/v1.json — not gated behind an environment check: it carries no secret (the JWT
+// signing key lives only in configuration/user-secrets, never in route or DTO metadata) and
+// this app has no separate "internal" vs "public" deployment split to hide it from.
+app.MapOpenApi();
 
 await app.SeedDevDataAsync();
 

@@ -11,13 +11,20 @@ namespace QuotesApi.Modules.Quotes.Api;
 // be duplicated between Program.cs's wired-up inline handlers and this file's own dead
 // MapQuoteEndpoints (the two had drifted: only the inline copy had caching/telemetry/
 // diagnostics). This is now the single source of truth for those routes.
+//
+// Day 27: routes moved under /api/v1 (explicit versioning), pagination "size" is capped
+// (previously unbounded — a caller could request size=2000000 and force one query to
+// materialize the whole table), and the collection endpoints were re-secured (see the
+// CREATE COLLECTION / DELETE COLLECTION ITEM comments below for what was wrong before).
 public static class QuoteEndpoints
 {
+    private const int MaxPageSize = 100;
+
     public static IEndpointRouteBuilder MapQuoteEndpoints(this IEndpointRouteBuilder app)
     {
         // GET ALL QUOTES
         app.MapGet(
-            "/api/quotes",
+            "/api/v1/quotes",
             async (
                 int page,
                 int size,
@@ -25,14 +32,14 @@ public static class QuoteEndpoints
                 CancellationToken cancellationToken) =>
             {
                 page = page < 1 ? 1 : page;
-                size = size < 1 ? 10 : size;
+                size = size < 1 ? 10 : size > MaxPageSize ? MaxPageSize : size;
                 var quotes = await repo.GetAllAsync(page, size, cancellationToken);
                 return Results.Ok(quotes);
             });
 
         // GET QUOTE BY ID — the cached hot read for Day 21.
         app.MapGet(
-            "/api/quotes/{id}",
+            "/api/v1/quotes/{id}",
             async (
                 int id,
                 IQuoteRepository repo,
@@ -101,7 +108,13 @@ public static class QuoteEndpoints
         // Day 21 experiment diagnostics: read/reset the real DB query counter and cache hit/miss
         // counters between load test runs, and evict a single quote's cache entry to force the
         // next request(s) into a genuine cache miss for the stampede test.
-        var diagnostics = app.MapGroup("/api/diagnostics");
+        //
+        // Day 27: these expose internal operational state and can degrade other users'
+        // experience (resetting shared counters, evicting shared cache entries), so they now
+        // require an authenticated caller — this app has no admin/role concept yet, so "any
+        // logged-in user" is the strongest boundary available without inventing one (see the
+        // STRIDE doc's residual-risk note).
+        var diagnostics = app.MapGroup("/api/v1/diagnostics").RequireAuthorization();
 
         diagnostics.MapGet("/db-queries", (DbQueryCounter counter) =>
             Results.Ok(new
@@ -142,7 +155,7 @@ public static class QuoteEndpoints
 
         // DELETE QUOTE
         app.MapDelete(
-            "/api/quotes/{id}",
+            "/api/v1/quotes/{id}",
             async (
                 int id,
                 IQuoteRepository repo,
@@ -157,7 +170,7 @@ public static class QuoteEndpoints
 
         // CREATE QUOTE
         app.MapPost(
-            "/api/quotes",
+            "/api/v1/quotes",
             async (
                 QuoteCreateRequest request,
                 HttpContext httpContext,
@@ -185,39 +198,96 @@ public static class QuoteEndpoints
                 activity?.SetTag("user.id", userId);
 
                 var created = await repo.AddAsync(quote!, cancellationToken);
-                return Results.Created($"/api/quotes/{created.Id}", created);
+                return Results.Created($"/api/v1/quotes/{created.Id}", created);
             })
             .RequireAuthorization("can-edit-quotes");
 
         // CREATE COLLECTION
+        //
+        // Day 27 fix: this used to bind the request body straight onto the Collection domain
+        // entity with no [Authorize] at all — an anonymous caller could set "ownerId" in the
+        // JSON body to any user id, creating collections attributed to someone else (an IDOR /
+        // spoofing bug, not merely a missing validation nicety). The owner is now always the
+        // caller's own claim; the request DTO doesn't even have an ownerId field to spoof. A bad
+        // name (too short/long) now returns 400 instead of an unhandled exception surfacing as a
+        // generic 500 from ExceptionMiddleware.
         app.MapPost(
-            "/api/collections",
-            async (
-                Collection collection,
+            "/api/v1/collections",
+            (
+                CollectionCreateRequest request,
+                HttpContext httpContext,
                 ICollectionRepository repo,
                 CancellationToken cancellationToken) =>
             {
-                await repo.Add(collection, cancellationToken);
-                return Results.Created($"/api/collections/{collection.Id}", collection);
-            });
+                var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim is null || !int.TryParse(userIdClaim.Value, out var userId))
+                {
+                    return Task.FromResult(Results.Unauthorized());
+                }
+
+                Collection collection;
+                try
+                {
+                    collection = new Collection(request.Name, userId);
+                }
+                catch (ArgumentException ex)
+                {
+                    return Task.FromResult(Results.ValidationProblem(
+                        new Dictionary<string, string[]> { ["name"] = [ex.Message] }));
+                }
+
+                return CreateAsync();
+
+                async Task<IResult> CreateAsync()
+                {
+                    await repo.Add(collection, cancellationToken);
+                    return Results.Created($"/api/v1/collections/{collection.Id}", collection);
+                }
+            })
+            .RequireAuthorization();
 
         // DELETE COLLECTION ITEM
+        //
+        // Day 27 fix: this had no [Authorize] and never checked that the collection belonged to
+        // the caller — any anonymous request could remove items from any user's collection by
+        // guessing/incrementing the id. It now requires authentication and enforces ownership,
+        // mirroring the "can-delete-own-quote" pattern already used for quotes. Removing an item
+        // that isn't in the collection now returns 404 instead of an unhandled exception.
         app.MapDelete(
-            "/api/collections/{id}/items/{quoteId}",
+            "/api/v1/collections/{id}/items/{quoteId}",
             async (
                 int id,
                 int quoteId,
+                HttpContext httpContext,
                 ICollectionRepository repo,
                 CancellationToken cancellationToken) =>
             {
+                var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim is null || !int.TryParse(userIdClaim.Value, out var userId))
+                {
+                    return Results.Unauthorized();
+                }
+
                 var collection = await repo.GetById(id, cancellationToken);
                 if (collection is null)
                     return Results.NotFound();
 
-                collection.RemoveItem(quoteId);
+                if (collection.OwnerId != userId)
+                    return Results.Forbid();
+
+                try
+                {
+                    collection.RemoveItem(quoteId);
+                }
+                catch (InvalidOperationException)
+                {
+                    return Results.NotFound();
+                }
+
                 await repo.Update(collection, cancellationToken);
                 return Results.NoContent();
-            });
+            })
+            .RequireAuthorization();
 
         return app;
     }

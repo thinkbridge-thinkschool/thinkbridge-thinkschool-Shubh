@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuotesApi.Modules.Quotes.Domain;
@@ -8,8 +9,12 @@ using QuotesApi.Shared.Infrastructure.Telemetry;
 
 namespace QuotesApi.Modules.Quotes.Api;
 
+// Day 27: this had no [Authorize] at all — any anonymous caller could enqueue a real DB-
+// touching background job. There is no admin/role concept in this app yet, so "any
+// authenticated user" is the boundary added here; see the STRIDE doc's residual-risk note.
 [ApiController]
-[Route("api/background-jobs")]
+[Route("api/v1/background-jobs")]
+[Authorize]
 public sealed class BackgroundJobsController : ControllerBase
 {
     private readonly IBackgroundJobQueue _queue;

@@ -18,11 +18,24 @@ namespace QuotesApi.Modules.Identity.Api;
 // a signing key, or a raw token.
 public static class IdentityEndpoints
 {
+    // Matches UserEntityConfiguration.Email's HasMaxLength(320) (the RFC 5321 upper bound).
+    private const int MaxEmailLength = 320;
+
+    // BCrypt only actually uses the first 72 bytes of a password, but with no cap at all a
+    // caller can send a multi-megabyte "password" that still has to be buffered and passed to
+    // BCrypt.HashPassword/Verify on every request — a cheap request-size DoS lever. 200 is far
+    // above any real password anyone would type.
+    private const int MaxPasswordLength = 200;
+
+    // Base64 of the 32-byte token this app issues is 44 chars; 512 leaves slack without
+    // accepting an arbitrarily large body as a "refresh token".
+    private const int MaxRefreshTokenLength = 512;
+
     public static IEndpointRouteBuilder MapIdentityEndpoints(this IEndpointRouteBuilder app)
     {
         // REGISTER
         app.MapPost(
-            "/api/auth/register",
+            "/api/v1/auth/register",
             async (
                 RegisterRequest request,
                 QuotesDbContext db,
@@ -31,21 +44,24 @@ public static class IdentityEndpoints
                 var email = request.Email?.Trim();
                 var password = request.Password;
 
-                if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+                if (string.IsNullOrWhiteSpace(email) || !email.Contains('@') ||
+                    email.Length > MaxEmailLength)
                 {
                     return Results.ValidationProblem(
                         new Dictionary<string, string[]>
                         {
-                            ["email"] = ["A valid email address is required."]
+                            ["email"] = [$"A valid email address (up to {MaxEmailLength} characters) is required."]
                         });
                 }
 
-                if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+                if (string.IsNullOrWhiteSpace(password) ||
+                    password.Length < 8 ||
+                    password.Length > MaxPasswordLength)
                 {
                     return Results.ValidationProblem(
                         new Dictionary<string, string[]>
                         {
-                            ["password"] = ["Password must be at least 8 characters."]
+                            ["password"] = [$"Password must be between 8 and {MaxPasswordLength} characters."]
                         });
                 }
 
@@ -91,13 +107,28 @@ public static class IdentityEndpoints
 
         // LOGIN
         app.MapPost(
-            "/api/auth/login",
+            "/api/v1/auth/login",
             async (
                 LoginRequest request,
                 QuotesDbContext db,
                 IConfiguration configuration,
                 CancellationToken cancellationToken) =>
             {
+                // Same request-size guard as register, checked before ever touching the
+                // database or BCrypt — an over-long email/password is rejected as 400, not
+                // treated as (and timed the same as) a wrong-password 401.
+                if (string.IsNullOrEmpty(request.Email) ||
+                    request.Email.Length > MaxEmailLength ||
+                    string.IsNullOrEmpty(request.Password) ||
+                    request.Password.Length > MaxPasswordLength)
+                {
+                    return Results.ValidationProblem(
+                        new Dictionary<string, string[]>
+                        {
+                            ["request"] = ["Email and password are required and must be a reasonable length."]
+                        });
+                }
+
                 var user =
                     await db.Set<User>().FirstOrDefaultAsync(
                         u => u.Email == request.Email,
@@ -134,12 +165,22 @@ public static class IdentityEndpoints
 
         // LOGOUT
         app.MapPost(
-            "/api/auth/logout",
+            "/api/v1/auth/logout",
             async (
                 RefreshRequest request,
                 QuotesDbContext db,
                 CancellationToken cancellationToken) =>
             {
+                if (string.IsNullOrEmpty(request.RefreshToken) ||
+                    request.RefreshToken.Length > MaxRefreshTokenLength)
+                {
+                    return Results.ValidationProblem(
+                        new Dictionary<string, string[]>
+                        {
+                            ["refreshToken"] = ["A valid refresh token is required."]
+                        });
+                }
+
                 var tokenHash =
                     Convert.ToBase64String(
                         SHA256.HashData(Encoding.UTF8.GetBytes(request.RefreshToken)));
@@ -159,7 +200,7 @@ public static class IdentityEndpoints
 
         // REFRESH TOKEN
         app.MapPost(
-            "/api/auth/refresh",
+            "/api/v1/auth/refresh",
             async (
                 RefreshRequest request,
                 QuotesDbContext db,
@@ -168,6 +209,16 @@ public static class IdentityEndpoints
                 IClock clock,
                 CancellationToken cancellationToken) =>
             {
+                if (string.IsNullOrEmpty(request.RefreshToken) ||
+                    request.RefreshToken.Length > MaxRefreshTokenLength)
+                {
+                    return Results.ValidationProblem(
+                        new Dictionary<string, string[]>
+                        {
+                            ["refreshToken"] = ["A valid refresh token is required."]
+                        });
+                }
+
                 logger.LogInformation("Refresh request received");
                 var tokenHash =
                     Convert.ToBase64String(

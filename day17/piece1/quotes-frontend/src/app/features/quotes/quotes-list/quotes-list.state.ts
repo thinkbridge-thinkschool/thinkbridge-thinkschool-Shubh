@@ -36,15 +36,15 @@ export class QuotesListState {
   // (QuotesList) rather than being duplicated here.
   private latestRequestId = 0;
 
-  // GET /api/quotes?page=&size= (Program.cs) — anonymous, real backend call.
-  // Callers (initial load, page/size change, retry, post-create/delete
-  // refetch) all funnel through this single method.
-  load(page: number, size: number): void {
+  // GET /api/quotes?page=&size=&author= (Program.cs) — anonymous, real backend
+  // call. Callers (initial load, page/size/author change, retry,
+  // post-create/delete refetch) all funnel through this single method.
+  load(page: number, size: number, author?: string): void {
     const requestId = ++this.latestRequestId;
     this._status.set('loading');
     this._errorMessage.set(null);
 
-    this.quotesService.getQuotes(page, size).subscribe({
+    this.quotesService.getQuotes(page, size, author).subscribe({
       next: (quotes) => {
         if (requestId !== this.latestRequestId) {
           return; // stale response: a newer load() started before this one arrived

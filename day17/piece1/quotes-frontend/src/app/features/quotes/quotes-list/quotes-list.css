@@ -9,6 +9,14 @@
   font-size: 0.9rem;
 }
 
+.author-search {
+  flex-wrap: wrap;
+}
+
+.author-search .input {
+  flex: 1 1 12rem;
+}
+
 .toolbar {
   display: flex;
   align-items: center;

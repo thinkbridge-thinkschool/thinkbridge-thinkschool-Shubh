@@ -43,6 +43,71 @@
     }
   </div>
 
+  <fieldset class="field collection-picker">
+    <legend class="field__label">Add to a collection (optional)</legend>
+
+    <div class="collection-picker__modes">
+      <label class="collection-picker__option">
+        <input
+          type="radio"
+          name="collectionMode"
+          [checked]="collectionMode() === 'none'"
+          (change)="setCollectionMode('none')"
+        />
+        None
+      </label>
+      <label class="collection-picker__option">
+        <input
+          type="radio"
+          name="collectionMode"
+          [checked]="collectionMode() === 'existing'"
+          [disabled]="collections().length === 0"
+          (change)="setCollectionMode('existing')"
+        />
+        Existing collection
+      </label>
+      <label class="collection-picker__option">
+        <input
+          type="radio"
+          name="collectionMode"
+          [checked]="collectionMode() === 'new'"
+          (change)="setCollectionMode('new')"
+        />
+        New collection
+      </label>
+    </div>
+
+    @if (collectionMode() === 'existing') {
+      <select
+        class="select"
+        [value]="selectedCollectionId() ?? ''"
+        (change)="selectedCollectionId.set(+$any($event.target).value)"
+      >
+        <option value="" disabled>Select a collection</option>
+        @for (collection of collections(); track collection.id) {
+          <option [value]="collection.id">{{ collection.name }}</option>
+        }
+      </select>
+    }
+
+    @if (collectionMode() === 'new') {
+      <input
+        class="input"
+        type="text"
+        autocomplete="off"
+        placeholder="Collection name"
+        minlength="3"
+        maxlength="80"
+        [value]="newCollectionName()"
+        (input)="newCollectionName.set($any($event.target).value)"
+      />
+    }
+
+    @if (collectionError()) {
+      <p class="alert alert--error" role="alert">{{ collectionError() }}</p>
+    }
+  </fieldset>
+
   <button type="submit" class="btn btn--primary btn--block" [disabled]="quoteForm().submitting()">
     @switch (quoteForm().submitting()) {
       @case (true) {

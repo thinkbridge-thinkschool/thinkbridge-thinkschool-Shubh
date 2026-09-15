@@ -7,6 +7,7 @@ public interface IQuoteRepository
     Task<List<Quote>> GetAllAsync(
     int page,
     int size,
+    string? author,
     CancellationToken cancellationToken);
     Task<Quote?> GetByIdAsync(int id, CancellationToken cancellationToken);
     Task<Quote> AddAsync(Quote quote, CancellationToken cancellationToken);

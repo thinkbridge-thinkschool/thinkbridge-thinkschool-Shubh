@@ -9,6 +9,32 @@
     <p class="alert alert--error" role="alert">{{ deleteError() }}</p>
   }
 
+  <div class="field field--inline author-search">
+    <label class="field__label" for="authorSearch">Search by author</label>
+    <input
+      id="authorSearch"
+      class="input"
+      type="text"
+      autocomplete="off"
+      placeholder="e.g. Mark Twain"
+      [value]="authorFilterInput()"
+      (input)="authorFilterInput.set($any($event.target).value)"
+      (keyup.enter)="applyAuthorFilter()"
+    />
+    <button type="button" class="btn btn--secondary btn--sm" (click)="applyAuthorFilter()">
+      Search
+    </button>
+    @if (appliedAuthorFilter()) {
+      <button type="button" class="btn btn--secondary btn--sm" (click)="clearAuthorFilter()">
+        Clear
+      </button>
+    }
+  </div>
+
+  @if (appliedAuthorFilter()) {
+    <p class="list-status">Filtering by author: "{{ appliedAuthorFilter() }}"</p>
+  }
+
   <div class="toolbar">
     <div class="pagination">
       <button

@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Host/">
+    <Project Path="Host/QuotesApi.Host.csproj" />
+  </Folder>
+  <Folder Name="/Modules/" />
+  <Folder Name="/Modules/Identity/">
+    <Project Path="Modules/Identity/QuotesApi.Modules.Identity.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Notifications/">
+    <Project Path="Modules/Notifications/QuotesApi.Modules.Notifications.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Quotes/">
+    <Project Path="Modules/Quotes/QuotesApi.Modules.Quotes.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="Shared/QuotesApi.Shared.csproj" />
+  </Folder>
+</Solution>

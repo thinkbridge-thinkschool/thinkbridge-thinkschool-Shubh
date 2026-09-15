@@ -47,6 +47,7 @@ module resources 'resources.bicep' = {
     principalType: principalType
     quotesApiExists: quotesApiExists
     jwtKey: jwtKey
+    environmentName: environmentName
   }
 }
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT

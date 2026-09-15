@@ -22,6 +22,16 @@ public class CollectionRepository : ICollectionRepository
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
+    public async Task<List<Collection>> GetByOwnerId(
+        int ownerId,
+        CancellationToken cancellationToken)
+    {
+        return await _db.Collections
+            .Include(c => c.Items)
+            .Where(c => c.OwnerId == ownerId)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task Add(
         Collection collection,
         CancellationToken cancellationToken)

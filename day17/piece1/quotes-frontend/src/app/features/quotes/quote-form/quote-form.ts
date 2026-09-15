@@ -10,9 +10,14 @@ import {
   submit,
   validate,
 } from '@angular/forms/signals';
+import { Auth } from '../../../core/services/auth';
 import { Quotes } from '../../../core/services/quotes';
+import { Collections } from '../../../core/services/collections';
 import { Quote } from '../../../core/models/quote.models';
+import { Collection } from '../../../core/models/collection.models';
 import { AppError, isAppError } from '../../../core/models/app-error.models';
+
+type CollectionMode = 'none' | 'existing' | 'new';
 
 // Exact wording used by Quote.Create (QuotesApi/Models/Quote.cs) for both the
 // "empty" and "too long" cases, so a client-side error and a server-surfaced
@@ -41,6 +46,8 @@ function blankAfterTrim(value: string, message: string) {
 })
 export class QuoteForm {
   private readonly quotes = inject(Quotes);
+  private readonly collectionsService = inject(Collections);
+  private readonly auth = inject(Auth);
 
   // Consumed by QuotesList (quotes-list.html: `(created)="onQuoteCreated()"`)
   // to refetch the current page after a new quote is saved.
@@ -49,6 +56,38 @@ export class QuoteForm {
   // `form()` uses this signal as its live data model — it does not keep its own
   // copy, so resetting values after submit means writing to this signal directly.
   private readonly model = signal<QuoteFormModel>({ author: '', text: '' });
+
+  // "Add to a collection" is optional metadata alongside the quote, not part
+  // of QuoteCreateRequest — kept as plain signals rather than folded into the
+  // Signal Forms model above, since it's a separate follow-up call
+  // (POST /api/collections then POST /api/collections/{id}/items, or just the
+  // latter) rather than a field the backend's QuoteCreateRequest validates.
+  protected readonly collections = signal<Collection[]>([]);
+  protected readonly collectionMode = signal<CollectionMode>('none');
+  protected readonly selectedCollectionId = signal<number | null>(null);
+  protected readonly newCollectionName = signal('');
+  protected readonly collectionError = signal<string | null>(null);
+
+  constructor() {
+    // QuoteForm only exists in the DOM while authenticated (quotes-list.html
+    // wraps it in `@if (auth.isAuthenticated())`), so GET /api/collections/mine
+    // is safe to call unconditionally here.
+    this.loadCollections();
+  }
+
+  private loadCollections(): void {
+    this.collectionsService.getMyCollections().subscribe({
+      next: (collections) => this.collections.set(collections),
+      // A failed fetch just means the "existing collection" option is
+      // unavailable this session — not worth surfacing as a form error.
+      error: () => this.collections.set([]),
+    });
+  }
+
+  protected setCollectionMode(mode: CollectionMode): void {
+    this.collectionMode.set(mode);
+    this.collectionError.set(null);
+  }
 
   // Shape and constraints mirror QuotesApi.Models.QuoteCreateRequest(Author, Text)
   // and the validation in Quote.Create: both fields required, not blank after
@@ -92,11 +131,13 @@ export class QuoteForm {
     // to separately guard re-entrancy the way the Reactive Forms version did.
     this.serverError.set(null);
     this.successMessage.set(null);
+    this.collectionError.set(null);
 
     const ok = await submit(this.quoteForm, async (_field, { submitted }) => {
       const { author, text } = submitted().value();
       try {
         const quote = await firstValueFrom(this.quotes.createQuote({ author, text }));
+        await this.attachToCollection(quote);
         this.successMessage.set(`Quote by ${quote.author} was created.`);
         this.model.set({ author: '', text: '' });
         submitted().reset();
@@ -119,6 +160,52 @@ export class QuoteForm {
 
     if (!ok) {
       this.focusFirstInvalidField();
+    }
+  }
+
+  // Runs after the quote itself is already saved. Deliberately doesn't throw:
+  // a failure here must not make handleSubmit treat quote creation as failed
+  // (the quote already exists), so it's surfaced through collectionError
+  // instead of the form's serverError/validation path.
+  private async attachToCollection(quote: Quote): Promise<void> {
+    const mode = this.collectionMode();
+    if (mode === 'none') {
+      return;
+    }
+
+    try {
+      let collectionId: number;
+
+      if (mode === 'new') {
+        const name = this.newCollectionName().trim();
+        const ownerId = this.auth.currentUserId();
+        if (!name || ownerId === null) {
+          return;
+        }
+        const created = await firstValueFrom(
+          this.collectionsService.createCollection({ name, ownerId }),
+        );
+        collectionId = created.id;
+      } else {
+        const id = this.selectedCollectionId();
+        if (id === null) {
+          return;
+        }
+        collectionId = id;
+      }
+
+      await firstValueFrom(
+        this.collectionsService.addItem(collectionId, { quoteId: quote.id }),
+      );
+
+      this.collectionMode.set('none');
+      this.selectedCollectionId.set(null);
+      this.newCollectionName.set('');
+      this.loadCollections();
+    } catch {
+      this.collectionError.set(
+        'The quote was created, but adding it to the collection failed. You can retry from the collection later.',
+      );
     }
   }
 

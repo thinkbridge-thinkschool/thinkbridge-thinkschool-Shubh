@@ -10,11 +10,16 @@ import { API_BASE_URL } from '../api-base-url';
 export class Quotes {
   private readonly http = inject(HttpClient);
 
-  // GET /api/quotes?page=&size= (Program.cs) — anonymous, paginated, no total-count field exists.
-  getQuotes(page: number, size: number): Observable<Quote[]> {
-    return this.http.get<Quote[]>(`${API_BASE_URL}/api/quotes`, {
-      params: { page, size },
-    });
+  // GET /api/quotes?page=&size=&author= (Program.cs) — anonymous, paginated, no
+  // total-count field exists. `author` is an optional case-insensitive
+  // "contains" filter matched server-side against every quote, not just the
+  // current page.
+  getQuotes(page: number, size: number, author?: string): Observable<Quote[]> {
+    const params: Record<string, string | number> = { page, size };
+    if (author) {
+      params['author'] = author;
+    }
+    return this.http.get<Quote[]>(`${API_BASE_URL}/api/quotes`, { params });
   }
 
   // GET /api/quotes/{id} (Program.cs) — anonymous.

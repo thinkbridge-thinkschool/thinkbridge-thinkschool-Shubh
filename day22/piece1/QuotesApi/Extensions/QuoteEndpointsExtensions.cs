@@ -15,6 +15,7 @@ public static class QuoteEndpointsExtensions
         group.MapGet("/", async (
             int page,
             int size,
+            string? author,
             IQuoteRepository repo,
             ILogger<Program> logger,
             CancellationToken ct) =>
@@ -27,7 +28,7 @@ public static class QuoteEndpointsExtensions
                 page, size);
 
             return Results.Ok(
-                await repo.GetAllAsync(page, size, ct));
+                await repo.GetAllAsync(page, size, author, ct));
         });
 
         group.MapGet("/{id:int}", async (

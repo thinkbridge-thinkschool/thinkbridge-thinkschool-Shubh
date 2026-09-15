@@ -33,20 +33,39 @@ export class QuotesList {
   protected readonly deletingId = signal<number | null>(null);
   protected readonly deleteError = signal<string | null>(null);
 
+  // Raw text box contents vs. the filter actually sent to the backend: kept
+  // separate so typing doesn't fire a request per keystroke — only
+  // applyAuthorFilter()/clearAuthorFilter() update appliedAuthorFilter, which
+  // is what the reload effect below watches.
+  readonly authorFilterInput = signal('');
+  protected readonly appliedAuthorFilter = signal('');
+
   constructor() {
-    // Meaningful effect: whenever page or pageSize changes, re-fetch from the
-    // real backend via the state service. This is a side effect (an HTTP
-    // call), not a derived value, which is why it belongs in effect() rather
-    // than computed().
+    // Meaningful effect: whenever page, pageSize, or the applied author
+    // filter changes, re-fetch from the real backend via the state service.
+    // This is a side effect (an HTTP call), not a derived value, which is why
+    // it belongs in effect() rather than computed().
     effect(() => {
       const page = this.page();
       const pageSize = this.pageSize();
-      this.state.load(page, pageSize);
+      const author = this.appliedAuthorFilter();
+      this.state.load(page, pageSize, author || undefined);
     });
   }
 
   protected retry(): void {
-    this.state.load(this.page(), this.pageSize());
+    this.state.load(this.page(), this.pageSize(), this.appliedAuthorFilter() || undefined);
+  }
+
+  protected applyAuthorFilter(): void {
+    this.page.set(1);
+    this.appliedAuthorFilter.set(this.authorFilterInput().trim());
+  }
+
+  protected clearAuthorFilter(): void {
+    this.authorFilterInput.set('');
+    this.page.set(1);
+    this.appliedAuthorFilter.set('');
   }
 
   protected nextPage(): void {

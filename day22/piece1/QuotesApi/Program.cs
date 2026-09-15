@@ -334,6 +334,7 @@ app.MapGet(
     async (
         int page,
         int size,
+        string? author,
         IQuoteRepository repo,
         CancellationToken cancellationToken) =>
     {
@@ -342,6 +343,7 @@ app.MapGet(
         var quotes = await repo.GetAllAsync(
             page,
             size,
+            author,
             cancellationToken);
         return Results.Ok(quotes);
     });
@@ -485,6 +487,73 @@ app.MapPost(
             $"/api/collections/{collection.Id}",
             collection);
     });
+
+// LIST MY COLLECTIONS
+app.MapGet(
+    "/api/collections/mine",
+    async (
+        HttpContext httpContext,
+        ICollectionRepository repo,
+        CancellationToken cancellationToken) =>
+    {
+        var userIdClaim =
+            httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim is null ||
+            !int.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Results.Unauthorized();
+        }
+
+        var collections =
+            await repo.GetByOwnerId(userId, cancellationToken);
+        return Results.Ok(collections);
+    })
+    .RequireAuthorization();
+
+// ADD ITEM TO COLLECTION
+app.MapPost(
+    "/api/collections/{id:int}/items",
+    async (
+        int id,
+        AddCollectionItemRequest request,
+        HttpContext httpContext,
+        ICollectionRepository repo,
+        IClock clock,
+        CancellationToken cancellationToken) =>
+    {
+        var userIdClaim =
+            httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim is null ||
+            !int.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Results.Unauthorized();
+        }
+
+        var collection =
+            await repo.GetById(id, cancellationToken);
+        if (collection is null)
+            return Results.NotFound();
+
+        if (collection.OwnerId != userId)
+            return Results.Forbid();
+
+        try
+        {
+            collection.AddItem(request.QuoteId, clock.UtcNow);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Conflict(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new { message = ex.Message });
+        }
+
+        await repo.Update(collection, cancellationToken);
+        return Results.NoContent();
+    })
+    .RequireAuthorization();
 
 // REGISTER
 app.MapPost(

@@ -18,10 +18,18 @@ public class QuoteRepository : IQuoteRepository
    public async Task<List<Quote>> GetAllAsync(
        int page,
        int size,
+       string? author,
        CancellationToken cancellationToken)
    {
-       return await _db.Quotes
-           .AsNoTracking()
+       var query = _db.Quotes.AsNoTracking().AsQueryable();
+
+       if (!string.IsNullOrWhiteSpace(author))
+       {
+           var searchTerm = author.Trim();
+           query = query.Where(q => EF.Functions.Like(q.Author, $"%{searchTerm}%"));
+       }
+
+       return await query
            .Skip((page - 1) * size)
            .Take(size)
            .ToListAsync(cancellationToken);

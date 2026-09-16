@@ -1,8 +1,8 @@
-// Development default. Matches the real QuotesApi backend run locally via
-// `dotnet run` in day22/piece1/QuotesApi (see Properties/launchSettings.json) —
-// the same port (5177) day13/piece1/QuotesApi originally used, so this URL
-// still applies as the backend has moved forward day by day.
+// Development default. Points at the Day 30 backend (day30/piece1/feature-
+// completeness/QuotesApi) run locally via `dotnet run`, against the local
+// SQL Server/Redis containers set up for that stage — never Azure. Update
+// the port here to match whatever ASPNETCORE_URLS the local run actually uses.
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:5177',
+  apiBaseUrl: 'http://localhost:5300',
 };

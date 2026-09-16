@@ -62,6 +62,14 @@ export function toAppError(error: unknown): AppError {
     return { kind: 'not-found', message: 'That item could not be found.' };
   }
 
+  if (error.status === 409) {
+    return {
+      kind: 'conflict',
+      message: isProblemDetails(error.error) ? error.error.title : 'That already exists.',
+      body: error.error,
+    };
+  }
+
   return {
     kind: 'server',
     message: isProblemDetails(error.error)

@@ -23,11 +23,17 @@ export interface ValidationProblemDetails extends ProblemDetails {
 // HttpErrorResponse/ProblemDetails wire shape. Every variant carries a
 // ready-to-render `message` so a component never has to guess how to turn a
 // status code into words.
+//
+// 'conflict' (409) is currently only produced by POST /api/v1/collections
+// when the caller already has a collection with that exact name (Day 30) —
+// the body also carries that existing collection so a caller can reuse it
+// instead of treating this as a hard failure (see quote-form.ts).
 export type AppError =
   | { kind: 'validation'; message: string; fieldErrors: Record<string, string[]> }
   | { kind: 'unauthorized'; message: string }
   | { kind: 'forbidden'; message: string }
   | { kind: 'not-found'; message: string }
+  | { kind: 'conflict'; message: string; body?: unknown }
   | { kind: 'server'; message: string; status: number }
   | { kind: 'network'; message: string };
 

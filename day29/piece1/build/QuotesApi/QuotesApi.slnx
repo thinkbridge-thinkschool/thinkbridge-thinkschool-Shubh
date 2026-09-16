@@ -15,4 +15,7 @@
   <Folder Name="/Shared/">
     <Project Path="Shared/QuotesApi.Shared.csproj" />
   </Folder>
+  <Folder Name="/Shared.Migrations.SqlServer/">
+    <Project Path="Shared.Migrations.SqlServer/QuotesApi.Shared.Migrations.SqlServer.csproj" />
+  </Folder>
 </Solution>

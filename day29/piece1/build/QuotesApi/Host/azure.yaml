@@ -8,6 +8,9 @@ services:
         project: .
         host: containerapp
         language: dotnet
+        docker:
+            path: ./Dockerfile
+            context: ..
 resources:
     quotes-api:
         type: host.containerapp

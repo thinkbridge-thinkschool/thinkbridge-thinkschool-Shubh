@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Caching.Hybrid;
+using StackExchange.Redis;
 using QuotesApi.Modules.Quotes.Application;
 using QuotesApi.Modules.Quotes.Domain;
 using QuotesApi.Modules.Quotes.Infrastructure;
@@ -46,6 +47,7 @@ public static class QuoteEndpoints
                 HybridCache cache,
                 CacheMetrics cacheMetrics,
                 IConfiguration configuration,
+                ILoggerFactory loggerFactory,
                 CancellationToken cancellationToken) =>
             {
                 var cachingEnabled = configuration.GetValue("Caching:Enabled", true);
@@ -97,8 +99,21 @@ public static class QuoteEndpoints
                 {
                     // Don't let a "not found" linger in the cache: a quote created later with
                     // this id must show up immediately instead of being masked by a stale
-                    // negative cache entry.
-                    await cache.RemoveAsync(cacheKey, cancellationToken);
+                    // negative cache entry. This is a best-effort cleanup, not the source of
+                    // truth — the database (via repo.GetByIdAsync above) already confirmed the
+                    // quote doesn't exist, so a Redis-only failure here (RedisException — the
+                    // L2 cache backend being unreachable/slow) must not turn a correct 404 into
+                    // a 500. A genuine application/database error still isn't caught here and
+                    // still surfaces as one.
+                    try
+                    {
+                        await cache.RemoveAsync(cacheKey, cancellationToken);
+                    }
+                    catch (RedisException ex)
+                    {
+                        loggerFactory.CreateLogger("QuotesApi.Modules.Quotes.Api.QuoteEndpoints")
+                            .LogWarning(ex, "Cache eviction failed for {CacheKey}; continuing with 404.", cacheKey);
+                    }
                     return Results.NotFound();
                 }
 
@@ -147,9 +162,19 @@ public static class QuoteEndpoints
         diagnostics.MapPost("/cache/{id:int}/evict", async (
             int id,
             HybridCache cache,
+            ILoggerFactory loggerFactory,
             CancellationToken cancellationToken) =>
         {
-            await cache.RemoveAsync($"quote:{id}", cancellationToken);
+            // Same graceful-failure rule as the other RemoveAsync call sites in this file.
+            try
+            {
+                await cache.RemoveAsync($"quote:{id}", cancellationToken);
+            }
+            catch (RedisException ex)
+            {
+                loggerFactory.CreateLogger("QuotesApi.Modules.Quotes.Api.QuoteEndpoints")
+                    .LogWarning(ex, "Cache eviction failed for quote:{Id} via diagnostics endpoint.", id);
+            }
             return Results.NoContent();
         });
 
@@ -159,12 +184,33 @@ public static class QuoteEndpoints
             async (
                 int id,
                 IQuoteRepository repo,
+                HybridCache cache,
+                ILoggerFactory loggerFactory,
                 CancellationToken cancellationToken) =>
             {
                 var deleted = await repo.DeleteAsync(id, cancellationToken);
-                return deleted
-                    ? Results.NoContent()
-                    : Results.NotFound();
+                if (!deleted)
+                    return Results.NotFound();
+
+                // Pre-existing gap found during Stage 3B regression testing: this handler
+                // never evicted the GET-by-id cache entry, so a just-deleted quote could
+                // still be served as "found" from HybridCache's L1 (up to its 30s local
+                // expiration) — not a Redis-specific failure, a plain missing invalidation.
+                // Same graceful-failure rule as the GET-by-id "not found" path: a cache
+                // backend problem (RedisException) must not turn a successful delete into a
+                // 500 — the database delete above already succeeded and is the source of
+                // truth.
+                try
+                {
+                    await cache.RemoveAsync($"quote:{id}", cancellationToken);
+                }
+                catch (RedisException ex)
+                {
+                    loggerFactory.CreateLogger("QuotesApi.Modules.Quotes.Api.QuoteEndpoints")
+                        .LogWarning(ex, "Cache eviction failed for quote:{Id} after delete.", id);
+                }
+
+                return Results.NoContent();
             })
             .RequireAuthorization("can-delete-own-quote");
 

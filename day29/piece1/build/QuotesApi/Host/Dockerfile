@@ -3,14 +3,13 @@
 #   docker build -f Host/Dockerfile -t quotesapi .      (run from QuotesApi/)
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY Host/QuotesApi.Host.csproj Host/
-COPY Modules/Quotes/QuotesApi.Modules.Quotes.csproj Modules/Quotes/
-COPY Modules/Identity/QuotesApi.Modules.Identity.csproj Modules/Identity/
-COPY Modules/Notifications/QuotesApi.Modules.Notifications.csproj Modules/Notifications/
-COPY Shared/QuotesApi.Shared.csproj Shared/
-RUN dotnet restore Host/QuotesApi.Host.csproj
+# Copying full source before restore (instead of csproj-only layer caching) — the
+# split restore-then-copy pattern hit NETSDK1064 ("Microsoft.AspNetCore.OpenApi ...
+# was not found. It might have been deleted since NuGet restore.") on first deploy,
+# where a --no-restore publish couldn't see packages the earlier RUN dotnet restore
+# had just fetched. Restoring and publishing in the same step avoids that mismatch.
 COPY . .
-RUN dotnet publish Host/QuotesApi.Host.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish Host/QuotesApi.Host.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app

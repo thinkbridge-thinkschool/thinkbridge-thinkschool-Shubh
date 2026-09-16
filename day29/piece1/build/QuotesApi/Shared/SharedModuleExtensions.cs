@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Options;
 using QuotesApi.Shared.Infrastructure.BackgroundJobs;
 using QuotesApi.Shared.Infrastructure.Persistence;
 using QuotesApi.Shared.Infrastructure.Resilience;
@@ -14,39 +15,50 @@ public static class SharedModuleExtensions
         IHostEnvironment environment)
     {
         // Database
-        // Production/development uses SQLite.
-        // Integration tests register SQL Server through QuotesApiFactory.
+        // Day 29: migrated from local SQLite to the existing Azure SQL server from Day 25
+        // (sql-day25-shubh2026, Entra-ID-only auth — SQL username/password logins are
+        // disabled at the server). Authentication is Managed Identity / Entra ID only, via
+        // SqlManagedIdentityConnectionInterceptor — no connection string ever carries a
+        // password. Integration tests register SQL Server through QuotesApiFactory.
         if (environment.IsEnvironment("Testing"))
         {
             // QuotesApiFactory registers QuotesDbContext with SQL Server.
         }
         else
         {
-            // A bare relative filename resolves against the process's current working
-            // directory, which isn't guaranteed writable under the container image this now
-            // also runs in (Azure Container Apps) — that combination throws SQLite Error 14
-            // ('unable to open database file') on every request. /tmp is writable there.
-            var sqliteDataSource = OperatingSystem.IsWindows()
-                ? "Data Source=quotes.db"
-                : "Data Source=/tmp/quotes.db";
+            services.Configure<SqlOptions>(configuration.GetSection("Sql"));
 
             services.AddDbContext<QuotesDbContext>((sp, options) =>
-                options.UseSqlite(sqliteDataSource)
+            {
+                var sqlOptions = sp.GetRequiredService<IOptions<SqlOptions>>().Value;
+                if (string.IsNullOrWhiteSpace(sqlOptions.Server))
+                {
+                    throw new InvalidOperationException("Sql:Server is not configured.");
+                }
+                if (string.IsNullOrWhiteSpace(sqlOptions.Database))
+                {
+                    throw new InvalidOperationException("Sql:Database is not configured.");
+                }
+
+                var connectionString =
+                    $"Server=tcp:{sqlOptions.Server},1433;Initial Catalog={sqlOptions.Database};" +
+                    "Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+
+                options.UseSqlServer(connectionString,
+                        // The Azure SQL migration history lives in its own assembly/project
+                        // (QuotesApi.Shared.Migrations.SqlServer) so the pre-existing SQLite
+                        // migrations under Infrastructure/Persistence/Migrations stay
+                        // untouched — EF Core only allows one ModelSnapshot per (DbContext,
+                        // assembly), so the two providers' histories can't share this one.
+                        x => x.MigrationsAssembly("QuotesApi.Shared.Migrations.SqlServer"))
                     // Every module can contribute an EF Core IInterceptor (e.g. Quotes'
                     // QuoteDbCommandInterceptor) without Shared needing a compile-time
                     // reference to that module — it just resolves whatever was registered
-                    // against the generic IInterceptor service.
+                    // against the generic IInterceptor service. The Managed Identity token
+                    // interceptor is added alongside them the same way.
                     .AddInterceptors(sp.GetServices<IInterceptor>())
-                    // The existing migration snapshot still names entities by their
-                    // pre-refactor namespace (e.g. "QuotesApi.Models.Quote"); the live model
-                    // now names them by their new module namespace, so EF's snapshot diff
-                    // sees a change even though not one column of actual schema moved. This
-                    // suppresses that specific warning rather than papering over a real
-                    // schema drift — see the architecture evidence doc's limitations
-                    // section for what a future `dotnet ef migrations add` needs to do
-                    // before this can be removed.
-                    .ConfigureWarnings(w =>
-                        w.Ignore(RelationalEventId.PendingModelChangesWarning)));
+                    .AddInterceptors(new SqlManagedIdentityConnectionInterceptor());
+            });
         }
 
         // Generic background job queue (Channel<T> + BackgroundService). This has no

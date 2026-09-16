@@ -59,6 +59,16 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-05-01'
   scope: resourceGroup('rg-quotes-api')
 }
 
+// Day 29: no Azure Cache for Redis exists in this subscription, and creating a dedicated
+// managed instance would be a real recurring cost for a Dev exercise. Reuses a small,
+// internal-only Redis container app already created in the shared environment above
+// (redis:7-alpine, TCP ingress, no public exposure) instead of provisioning new Redis
+// infrastructure — read here only to resolve its internal FQDN for Redis__ConnectionString.
+resource redisCacheShared 'Microsoft.App/containerApps@2023-05-01' existing = {
+  name: 'redis-cache-shared'
+  scope: resourceGroup('rg-quotes-api')
+}
+
 module quotesApiIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.2.1' = {
   name: 'quotesApiidentity'
   params: {
@@ -97,7 +107,9 @@ module quotesApi 'br/public:avm/res/app/container-app:0.8.0' = {
     // this app uses its own environment-specific name (see containerAppName above).
     name: containerAppName
     ingressTargetPort: 8080
-    scaleMinReplicas: 1
+    // Day 29 Dev: scale to zero when idle — this is a Dev/verification environment, not a
+    // production deployment, and Azure for Students credits are limited.
+    scaleMinReplicas: 0
     scaleMaxReplicas: 10
     secrets: {
       secureList:  [
@@ -131,6 +143,30 @@ module quotesApi 'br/public:avm/res/app/container-app:0.8.0' = {
           {
             name: 'Jwt__Key'
             secretRef: 'jwt-key'
+          }
+          {
+            // Dedicated Day 29 database on the existing Day 25 Entra-ID-only SQL server —
+            // never Day 25's own identitydb. Authentication is Managed Identity via
+            // SqlManagedIdentityConnectionInterceptor; no password anywhere.
+            name: 'Sql__Server'
+            value: 'sql-day25-shubh2026.database.windows.net'
+          }
+          {
+            name: 'Sql__Database'
+            value: 'quotesapi-day29'
+          }
+          {
+            // The shared internal Redis container app (see redisCacheShared above) — not a
+            // new dedicated Redis instance. Stage 3B investigated a Container Apps platform
+            // issue where this internal TCP-transport ingress's documented exposedPort
+            // (6379) accepts no connections (silent timeout) while the standard port 443
+            // completes a TCP handshake but then resets as soon as StackExchange.Redis sends
+            // its first command — neither is currently usable for real Redis traffic. 6379
+            // matches Azure's documented exposedPort/targetPort contract, so it stays here
+            // as the semantically correct value pending further investigation, rather than
+            // the empirically-also-broken 443. See Stage 3B's report for full diagnosis.
+            name: 'Redis__ConnectionString'
+            value: '${redisCacheShared.properties.configuration.ingress.fqdn}:6379'
           }
         ]
       }

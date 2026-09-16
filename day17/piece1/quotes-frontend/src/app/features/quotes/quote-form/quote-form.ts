@@ -182,10 +182,25 @@ export class QuoteForm {
         if (!name || ownerId === null) {
           return;
         }
-        const created = await firstValueFrom(
-          this.collectionsService.createCollection({ name, ownerId }),
-        );
-        collectionId = created.id;
+        try {
+          const created = await firstValueFrom(
+            this.collectionsService.createCollection({ name, ownerId }),
+          );
+          collectionId = created.id;
+        } catch (err) {
+          // The caller already has a collection with this exact name (Day 30:
+          // POST /api/v1/collections returns 409 with the existing collection
+          // in the body instead of creating a duplicate). That's the expected
+          // "reuse Favorites" outcome, not a failure — attach to it just like
+          // the "existing collection" path below would.
+          const existing = isAppError(err) && err.kind === 'conflict'
+            ? (err.body as { collection?: { id: number } } | undefined)?.collection
+            : undefined;
+          if (existing === undefined) {
+            throw err;
+          }
+          collectionId = existing.id;
+        }
       } else {
         const id = this.selectedCollectionId();
         if (id === null) {

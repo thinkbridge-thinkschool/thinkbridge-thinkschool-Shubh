@@ -27,6 +27,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/quotes/quote-detail/quote-detail').then((m) => m.QuoteDetail),
       },
+      // Lazy-loaded, same reasoning as quotes/:id above: My Collections is a
+      // secondary view, not part of the initial bundle.
+      {
+        path: 'collections',
+        loadComponent: () =>
+          import('./features/collections/collections-page/collections-page').then(
+            (m) => m.CollectionsPage,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'login' },

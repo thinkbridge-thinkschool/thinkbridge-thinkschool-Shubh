@@ -1,0 +1,73 @@
+<section class="collections-panel" aria-live="polite">
+  <h1 class="collections-panel__title">My Collections</h1>
+
+  @if (removeError()) {
+    <p class="alert alert--error" role="alert">{{ removeError() }}</p>
+  }
+
+  @switch (status()) {
+    @case ('loading') {
+      <div class="list-skeleton" role="status" aria-label="Loading collections">
+        @for (i of [0, 1]; track i) {
+          <div class="list-skeleton__card">
+            <div class="skeleton-line skeleton-line--lg"></div>
+            <div class="skeleton-line skeleton-line--md"></div>
+          </div>
+        }
+      </div>
+    }
+    @case ('error') {
+      <div class="alert alert--error state--error" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <button type="button" class="btn btn--secondary btn--sm" (click)="retry()">Retry</button>
+      </div>
+    }
+    @case ('loaded') {
+      @if (collections().length === 0) {
+        <div class="state state--empty">
+          <p>You don't have any collections yet.</p>
+          <p class="list-status">
+            Create one from the "Add to a collection" option when creating a quote.
+          </p>
+        </div>
+      } @else {
+        <ul class="collection-list">
+          @for (collection of collections(); track collection.id) {
+            <li class="card collection-card">
+              <h2 class="collection-card__name">{{ collection.name }}</h2>
+
+              @if (collection.items.length === 0) {
+                <p class="list-status">No quotes in this collection yet.</p>
+              } @else {
+                <ul class="collection-card__items">
+                  @for (item of collection.items; track item.quoteId) {
+                    <li class="collection-item">
+                      <a class="collection-item__link" [routerLink]="['/quotes', item.quoteId]">
+                        Quote #{{ item.quoteId }}
+                      </a>
+                      <button
+                        type="button"
+                        class="btn btn--danger btn--sm"
+                        (click)="removeItem(collection.id, item.quoteId)"
+                        [disabled]="isRemoving(collection.id, item.quoteId)"
+                      >
+                        @switch (isRemoving(collection.id, item.quoteId)) {
+                          @case (true) {
+                            Removing…
+                          }
+                          @default {
+                            Remove
+                          }
+                        }
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

@@ -47,9 +47,9 @@ describe('authInterceptor', () => {
     auth.accessToken.set(validToken);
     expect(auth.isAuthenticated()).toBe(true);
 
-    http.get(`${API_BASE_URL}/api/quotes?page=1&size=10`).subscribe();
+    http.get(`${API_BASE_URL}/api/v1/quotes?page=1&size=10`).subscribe();
 
-    const req = httpMock.expectOne(`${API_BASE_URL}/api/quotes?page=1&size=10`);
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/v1/quotes?page=1&size=10`);
     expect(req.request.headers.get('Authorization')).toBe(`Bearer ${validToken}`);
     req.flush([]);
   });
@@ -57,9 +57,9 @@ describe('authInterceptor', () => {
   it('does NOT add an Authorization header when there is no token (anonymous request)', () => {
     expect(auth.accessToken()).toBeNull();
 
-    http.get(`${API_BASE_URL}/api/quotes?page=1&size=10`).subscribe();
+    http.get(`${API_BASE_URL}/api/v1/quotes?page=1&size=10`).subscribe();
 
-    const req = httpMock.expectOne(`${API_BASE_URL}/api/quotes?page=1&size=10`);
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/v1/quotes?page=1&size=10`);
     expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush([]);
   });
@@ -87,9 +87,9 @@ describe('authInterceptor', () => {
     auth.accessToken.set(expiredToken);
     expect(auth.isAuthenticated()).toBe(false);
 
-    http.get(`${API_BASE_URL}/api/quotes?page=1&size=10`).subscribe();
+    http.get(`${API_BASE_URL}/api/v1/quotes?page=1&size=10`).subscribe();
 
-    const req = httpMock.expectOne(`${API_BASE_URL}/api/quotes?page=1&size=10`);
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/v1/quotes?page=1&size=10`);
     expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush([]);
   });

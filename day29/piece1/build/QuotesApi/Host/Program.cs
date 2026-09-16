@@ -96,9 +96,9 @@ builder.Services.AddOpenApi(options =>
 
 var app = builder.Build();
 
-// A fresh database (see the SQLite Data Source in Shared/SharedModuleExtensions.cs) has no
-// schema until migrations are applied — without this every query 500s with "no such table".
-// Migrate() is idempotent, so this is safe to run unconditionally.
+// A fresh database (see the Azure SQL connection in Shared/SharedModuleExtensions.cs) has no
+// schema until migrations are applied — without this every query 500s with an invalid-object
+// error. Migrate() is idempotent, so this is safe to run unconditionally.
 if (!app.Environment.IsEnvironment("Testing"))
 {
     using var migrationScope = app.Services.CreateScope();

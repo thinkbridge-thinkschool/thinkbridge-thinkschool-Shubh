@@ -33,7 +33,7 @@ describe('QuotesListState', () => {
   function expectQuotesRequest(page: number, size: number) {
     return httpMock.expectOne(
       (req) =>
-        req.url === `${API_BASE_URL}/api/quotes` &&
+        req.url === `${API_BASE_URL}/api/v1/quotes` &&
         req.params.get('page') === String(page) &&
         req.params.get('size') === String(size),
     );

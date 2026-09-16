@@ -39,7 +39,10 @@ public sealed class QuoteDbCommandInterceptor : DbCommandInterceptor
 
     private void CountIfQuotesQuery(DbCommand command)
     {
-        if (command.CommandText.Contains("\"Quotes\"", StringComparison.Ordinal))
+        // SQLite quotes identifiers as "Quotes"; SQL Server quotes them as [Quotes]. Check
+        // both so this counter survives the Day 29 SQLite -> Azure SQL provider switch.
+        if (command.CommandText.Contains("\"Quotes\"", StringComparison.Ordinal)
+            || command.CommandText.Contains("[Quotes]", StringComparison.Ordinal))
         {
             _counter.Increment();
         }

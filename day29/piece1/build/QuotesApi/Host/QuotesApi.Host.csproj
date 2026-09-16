@@ -13,6 +13,12 @@
   <ItemGroup>
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <!-- dotnet-ef requires the startup project itself to reference Design (Shared and the
+         migrations project both mark it PrivateAssets="all", so it doesn't flow here). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
@@ -29,6 +35,9 @@
     <ProjectReference Include="..\Modules\Identity\QuotesApi.Modules.Identity.csproj" />
     <ProjectReference Include="..\Modules\Notifications\QuotesApi.Modules.Notifications.csproj" />
     <ProjectReference Include="..\Shared\QuotesApi.Shared.csproj" />
+    <!-- Day 29: the Azure SQL migrations assembly (see SharedModuleExtensions' MigrationsAssembly
+         config) must be part of the running app so Database.Migrate() can find it. -->
+    <ProjectReference Include="..\Shared.Migrations.SqlServer\QuotesApi.Shared.Migrations.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

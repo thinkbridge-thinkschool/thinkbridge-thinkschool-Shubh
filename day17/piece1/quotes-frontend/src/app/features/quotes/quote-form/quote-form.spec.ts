@@ -131,7 +131,7 @@ describe('QuoteForm (Signal Forms)', () => {
     expect(authorInput().getAttribute('aria-invalid')).toBe('true');
   });
 
-  it('submits POST /api/quotes with exactly {author, text} on a clean, valid form', async () => {
+  it('submits POST /api/v1/quotes with exactly {author, text} on a clean, valid form', async () => {
     const { fixture, authorInput, textInput } = create();
     const comp = fixture.componentInstance as any;
 
@@ -142,7 +142,7 @@ describe('QuoteForm (Signal Forms)', () => {
     const submitPromise = comp.handleSubmit(new Event('submit', { cancelable: true }));
     await Promise.resolve();
 
-    const req = httpMock.expectOne(`${API_BASE_URL}/api/quotes`);
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/v1/quotes`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
       author: 'Ada Lovelace',
@@ -177,7 +177,7 @@ describe('QuoteForm (Signal Forms)', () => {
     expect(button.disabled).toBe(true);
     expect(button.textContent).toContain('Creating…');
 
-    const req = httpMock.expectOne(`${API_BASE_URL}/api/quotes`);
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/v1/quotes`);
     req.flush({ id: 1, author: 'Ada Lovelace', text: 'x', isDeleted: false, userId: 1 });
     await submitPromise;
     await fixture.whenStable();
@@ -196,7 +196,7 @@ describe('QuoteForm (Signal Forms)', () => {
     const submitPromise = comp.handleSubmit(new Event('submit', { cancelable: true }));
     await Promise.resolve();
 
-    const req = httpMock.expectOne(`${API_BASE_URL}/api/quotes`);
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/v1/quotes`);
     req.flush(
       { errors: { author: ['Author must be between 1 and 200 characters.'] } },
       { status: 400, statusText: 'Bad Request' },
@@ -224,7 +224,7 @@ describe('QuoteForm (Signal Forms)', () => {
 
     const submitPromise = comp.handleSubmit(new Event('submit', { cancelable: true }));
     await Promise.resolve();
-    const req = httpMock.expectOne(`${API_BASE_URL}/api/quotes`);
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/v1/quotes`);
     req.flush({ title: 'Server error' }, { status: 500, statusText: 'Internal Server Error' });
 
     await submitPromise;

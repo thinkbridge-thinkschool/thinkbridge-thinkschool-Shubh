@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { retryGetInterceptor } from './retry-interceptor';
 
-const URL = 'http://localhost:5177/api/quotes?page=1&size=10';
+const URL = 'http://localhost:5177/api/v1/quotes?page=1&size=10';
 
 describe('retryGetInterceptor', () => {
   let http: HttpClient;
@@ -81,34 +81,34 @@ describe('retryGetInterceptor', () => {
     expect(await resultPromise).toMatchObject({ status: 404 });
   });
 
-  it('does NOT retry POST /api/quotes, even when the server returns a transient 500', async () => {
+  it('does NOT retry POST /api/v1/quotes, even when the server returns a transient 500', async () => {
     const resultPromise = firstValueFrom(
-      http.post('http://localhost:5177/api/quotes', { author: 'Ada', text: 'Hi' }),
+      http.post('http://localhost:5177/api/v1/quotes', { author: 'Ada', text: 'Hi' }),
     ).catch((err: unknown) => err);
 
-    httpMock.expectOne('http://localhost:5177/api/quotes').flush(null, {
+    httpMock.expectOne('http://localhost:5177/api/v1/quotes').flush(null, {
       status: 500,
       statusText: 'Server Error',
     });
 
     await vi.advanceTimersByTimeAsync(1000);
-    httpMock.expectNone('http://localhost:5177/api/quotes'); // exactly one attempt, ever
+    httpMock.expectNone('http://localhost:5177/api/v1/quotes'); // exactly one attempt, ever
 
     expect(await resultPromise).toMatchObject({ status: 500 });
   });
 
-  it('does NOT retry DELETE /api/quotes/{id}, even when the server returns a transient 500', async () => {
-    const resultPromise = firstValueFrom(http.delete('http://localhost:5177/api/quotes/1')).catch(
+  it('does NOT retry DELETE /api/v1/quotes/{id}, even when the server returns a transient 500', async () => {
+    const resultPromise = firstValueFrom(http.delete('http://localhost:5177/api/v1/quotes/1')).catch(
       (err: unknown) => err,
     );
 
-    httpMock.expectOne('http://localhost:5177/api/quotes/1').flush(null, {
+    httpMock.expectOne('http://localhost:5177/api/v1/quotes/1').flush(null, {
       status: 500,
       statusText: 'Server Error',
     });
 
     await vi.advanceTimersByTimeAsync(1000);
-    httpMock.expectNone('http://localhost:5177/api/quotes/1');
+    httpMock.expectNone('http://localhost:5177/api/v1/quotes/1');
 
     expect(await resultPromise).toMatchObject({ status: 500 });
   });

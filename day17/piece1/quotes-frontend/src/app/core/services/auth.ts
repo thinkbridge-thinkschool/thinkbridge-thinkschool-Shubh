@@ -103,7 +103,7 @@ export class Auth {
     this.loginPending.set(true);
     this.loginError.set(null);
 
-    this.http.post<TokenResponse>(`${API_BASE_URL}/api/auth/login`, request).subscribe({
+    this.http.post<TokenResponse>(`${API_BASE_URL}/api/v1/auth/login`, request).subscribe({
       next: (response) => {
         this.accessToken.set(response.access_token);
         this.loginPending.set(false);
@@ -117,15 +117,15 @@ export class Auth {
     });
   }
 
-  // POST /api/auth/register (Program.cs) creates the account but does not log the user
-  // in — it returns no token, unlike /api/auth/login. registerSuccess is what the
-  // Register page watches to navigate to /login once the account actually exists.
+  // POST /api/v1/auth/register (Day 29 IdentityEndpoints) creates the account but does not
+  // log the user in — it returns no token, unlike /api/v1/auth/login. registerSuccess is
+  // what the Register page watches to navigate to /login once the account actually exists.
   register(request: RegisterRequest): void {
     this.registerPending.set(true);
     this.registerError.set(null);
     this.registerSuccess.set(false);
 
-    this.http.post(`${API_BASE_URL}/api/auth/register`, request).subscribe({
+    this.http.post(`${API_BASE_URL}/api/v1/auth/register`, request).subscribe({
       next: () => {
         this.registerPending.set(false);
         this.registerSuccess.set(true);

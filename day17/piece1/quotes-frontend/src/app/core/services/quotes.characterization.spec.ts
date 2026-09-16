@@ -16,7 +16,7 @@ const SEEDED_EMAIL = 'test@example.com';
 const SEEDED_PASSWORD = 'Password123!';
 
 async function login(): Promise<string> {
-  const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: SEEDED_EMAIL, password: SEEDED_PASSWORD }),
@@ -27,8 +27,8 @@ async function login(): Promise<string> {
 }
 
 describe('QuotesApi real backend characterization (day13/piece1/QuotesApi)', () => {
-  it('GET /api/quotes?page=&size= returns 200 with a bare Quote[] (no {items,total} wrapper)', async () => {
-    const res = await fetch(`${API_BASE_URL}/api/quotes?page=1&size=3`);
+  it('GET /api/v1/quotes?page=&size= returns 200 with a bare Quote[] (no {items,total} wrapper)', async () => {
+    const res = await fetch(`${API_BASE_URL}/api/v1/quotes?page=1&size=3`);
     expect(res.status).toBe(200);
 
     const body: unknown = await res.json();
@@ -47,19 +47,19 @@ describe('QuotesApi real backend characterization (day13/piece1/QuotesApi)', () 
     }
   });
 
-  it('GET /api/quotes?page=&size= returns 200 with an empty array for an out-of-range page (empty-list state)', async () => {
-    const res = await fetch(`${API_BASE_URL}/api/quotes?page=999999&size=5`);
+  it('GET /api/v1/quotes?page=&size= returns 200 with an empty array for an out-of-range page (empty-list state)', async () => {
+    const res = await fetch(`${API_BASE_URL}/api/v1/quotes?page=999999&size=5`);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual([]);
   });
 
-  it('GET /api/quotes/{id} returns 404 for a non-existent id', async () => {
-    const res = await fetch(`${API_BASE_URL}/api/quotes/999999999`);
+  it('GET /api/v1/quotes/{id} returns 404 for a non-existent id', async () => {
+    const res = await fetch(`${API_BASE_URL}/api/v1/quotes/999999999`);
     expect(res.status).toBe(404);
   });
 
-  it('POST /api/quotes without a token returns 401, unauthenticated writes are rejected outright', async () => {
-    const res = await fetch(`${API_BASE_URL}/api/quotes`, {
+  it('POST /api/v1/quotes without a token returns 401, unauthenticated writes are rejected outright', async () => {
+    const res = await fetch(`${API_BASE_URL}/api/v1/quotes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ author: 'Someone', text: 'Some text' }),
@@ -67,10 +67,10 @@ describe('QuotesApi real backend characterization (day13/piece1/QuotesApi)', () 
     expect(res.status).toBe(401);
   });
 
-  it('POST /api/quotes with an invalid body returns 400 with the real ASP.NET Core ValidationProblemDetails shape', async () => {
+  it('POST /api/v1/quotes with an invalid body returns 400 with the real ASP.NET Core ValidationProblemDetails shape', async () => {
     const token = await login();
 
-    const res = await fetch(`${API_BASE_URL}/api/quotes`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/quotes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ author: '', text: 'has a body but no author' }),

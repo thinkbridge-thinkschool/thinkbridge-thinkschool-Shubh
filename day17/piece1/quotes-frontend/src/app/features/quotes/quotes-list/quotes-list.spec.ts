@@ -33,10 +33,10 @@ describe('QuotesList states', () => {
   afterEach(() => httpMock.verify());
 
   function expectQuotesRequest() {
-    return httpMock.expectOne((req) => req.url === `${API_BASE_URL}/api/quotes`);
+    return httpMock.expectOne((req) => req.url === `${API_BASE_URL}/api/v1/quotes`);
   }
 
-  it('shows the loading skeleton while the initial GET /api/quotes request is in flight', () => {
+  it('shows the loading skeleton while the initial GET /api/v1/quotes request is in flight', () => {
     const fixture = TestBed.createComponent(QuotesList);
     fixture.detectChanges();
 
@@ -104,7 +104,7 @@ describe('QuotesList states', () => {
 
   function expectPageRequest(page: number) {
     return httpMock.expectOne(
-      (req) => req.url === `${API_BASE_URL}/api/quotes` && req.params.get('page') === String(page),
+      (req) => req.url === `${API_BASE_URL}/api/v1/quotes` && req.params.get('page') === String(page),
     );
   }
 

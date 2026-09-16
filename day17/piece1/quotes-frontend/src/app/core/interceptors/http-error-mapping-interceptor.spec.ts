@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { AppError } from '../models/app-error.models';
 import { httpErrorMappingInterceptor } from './http-error-mapping-interceptor';
 
-const URL = 'http://localhost:5177/api/quotes';
+const URL = 'http://localhost:5177/api/v1/quotes';
 
 describe('httpErrorMappingInterceptor', () => {
   let http: HttpClient;

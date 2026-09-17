@@ -1,0 +1,30 @@
+<div class="app-shell">
+  <header class="navbar">
+    <div class="navbar__inner">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">Q</span>
+        <span class="brand__name">QuotesApi</span>
+      </div>
+
+      <nav class="navbar__links">
+        <a routerLink="/quotes" routerLinkActive="navbar__link--active" class="navbar__link">
+          Quotes
+        </a>
+        <a routerLink="/collections" routerLinkActive="navbar__link--active" class="navbar__link">
+          My Collections
+        </a>
+      </nav>
+
+      <div class="session">
+        <span class="session__user">{{ auth.currentUserEmail() }}</span>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="logout()">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <div class="container">
+      <router-outlet />
+    </div>
+  </main>
+</div>

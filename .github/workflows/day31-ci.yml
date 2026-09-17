@@ -1,0 +1,190 @@
+name: Day 31 CI
+
+on:
+  push:
+    branches:
+      - day31-piece1
+    paths:
+      - 'day31/piece1/polish/**'
+      - '.github/workflows/day31-ci.yml'
+  pull_request:
+    paths:
+      - 'day31/piece1/polish/**'
+      - '.github/workflows/day31-ci.yml'
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore day31/piece1/polish/QuotesApi/Host/QuotesApi.Host.csproj
+
+      - name: Build
+        run: dotnet build day31/piece1/polish/QuotesApi/Host/QuotesApi.Host.csproj --no-restore
+
+      # No Docker "services:" block needed here: Microsoft.NET.Test.Sdk + Testcontainers.MsSql
+      # / Testcontainers.Redis pull and start their own ephemeral SQL Server + Redis
+      # containers during the test run itself (the same mcr.microsoft.com/mssql/server:2022-
+      # latest and redis:7-alpine images used locally) — GitHub's ubuntu-latest runners come
+      # with Docker preinstalled. Nothing here depends on Azure SQL, Azure Redis, Azure
+      # Service Bus, or any production secret.
+      - name: Unit tests (with coverage)
+        run: >
+          dotnet test day31/piece1/polish/QuotesApi.Tests.Unit/QuotesApi.Tests.Unit.csproj
+          --no-build
+          --logger "trx;LogFileName=unit-results.trx"
+          --collect:"XPlat Code Coverage"
+
+      - name: Integration tests (WebApplicationFactory + Testcontainers, with coverage)
+        run: >
+          dotnet test day31/piece1/polish/QuotesApi.Tests.Integration/QuotesApi.Tests.Integration.csproj
+          --logger "trx;LogFileName=integration-results.trx"
+          --collect:"XPlat Code Coverage"
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day31-backend-test-results
+          path: |
+            day31/**/TestResults/**/*.trx
+            day31/**/TestResults/**/coverage.cobertura.xml
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    needs: backend-tests
+    services:
+      # A dedicated CI-only SQL Server/Redis pair for the one thing Testcontainers can't
+      # stand in for here: a real, long-lived backend process for Playwright to drive a real
+      # browser against (WebApplicationFactory's in-memory TestServer has no TCP port a
+      # browser could hit). Ephemeral per workflow run — never Azure SQL/Azure Redis.
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Day31_CI_Pass!2026"
+        ports:
+          - 1433:1433
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: day31/piece1/polish/quotes-frontend/package-lock.json
+
+      - name: Wait for SQL Server readiness
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec "${{ job.services.sqlserver.id }}" /opt/mssql-tools18/bin/sqlcmd \
+                -S localhost -U sa -P "Day31_CI_Pass!2026" -C -Q "SELECT 1" > /dev/null 2>&1; then
+              echo "SQL Server is ready."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "SQL Server did not become ready in time." >&2
+          exit 1
+
+      - name: Restore and build backend
+        run: dotnet build day31/piece1/polish/QuotesApi/Host/QuotesApi.Host.csproj
+
+      - name: Start Day 31 backend
+        working-directory: day31/piece1/polish/QuotesApi/Host
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5310
+          # CI-only, non-production values — never real secrets, never Azure SQL/Azure
+          # Redis/Azure Service Bus. Sql:LocalConnectionString is exactly the "local-only
+          # development" escape hatch SqlOptions.cs documents.
+          Sql__LocalConnectionString: "Server=localhost,1433;Database=QuotesApiCi;User Id=sa;Password=Day31_CI_Pass!2026;TrustServerCertificate=True;Encrypt=False;"
+          Redis__ConnectionString: "localhost:6379"
+          Caching__Enabled: "true"
+          Jwt__Key: "ci-only-signing-key-not-a-production-secret-0123456789"
+          Jwt__Issuer: "QuotesApi"
+          Jwt__Audience: "QuotesApiClient"
+          Jwt__ExpiresInMinutes: "15"
+          Entra__TenantId: "ci-test-tenant"
+          Entra__ClientId: "ci-test-client"
+          Entra__Audience: "ci-test-audience"
+          # "localhost" resolves instantly and fails fast (connection refused) instead of a
+          # slow DNS timeout for a fake external hostname — OutboxRelayWorker's own
+          # try/catch already tolerates this; nothing here depends on Service Bus.
+          ServiceBus__Namespace: "localhost"
+          Outbox__PollingIntervalSeconds: "3600"
+        run: nohup dotnet run --no-launch-profile --no-build > backend.log 2>&1 &
+
+      - name: Wait for backend readiness
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf "http://localhost:5310/api/v1/quotes?page=1&size=1" > /dev/null; then
+              echo "Backend is ready."
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "--- backend.log ---"
+          cat day31/piece1/polish/QuotesApi/Host/backend.log || true
+          echo "Backend did not become ready in time." >&2
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: day31/piece1/polish/quotes-frontend
+        run: npm ci
+
+      - name: Frontend production build
+        working-directory: day31/piece1/polish/quotes-frontend
+        run: npm run build
+
+      - name: Install Playwright browsers
+        working-directory: day31/piece1/polish/quotes-frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start frontend dev server
+        working-directory: day31/piece1/polish/quotes-frontend
+        run: nohup npx ng serve --port 4210 --host localhost > frontend.log 2>&1 &
+
+      - name: Wait for frontend readiness
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf "http://localhost:4210/login" > /dev/null; then
+              echo "Frontend is ready."
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "--- frontend.log ---"
+          cat day31/piece1/polish/quotes-frontend/frontend.log || true
+          echo "Frontend did not become ready in time." >&2
+          exit 1
+
+      - name: Run Playwright E2E test
+        working-directory: day31/piece1/polish/quotes-frontend
+        run: npx playwright test --reporter=list
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day31-playwright-report
+          path: day31/piece1/polish/quotes-frontend/test-results

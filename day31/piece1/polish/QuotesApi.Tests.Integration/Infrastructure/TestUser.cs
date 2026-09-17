@@ -2,6 +2,10 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using QuotesApi.Modules.Identity.Domain;
+using QuotesApi.Shared.Infrastructure.Persistence;
 
 namespace QuotesApi.Tests.Integration.Infrastructure;
 
@@ -48,6 +52,37 @@ public static class TestUser
 
         var registerResponse = await RegisterAsync(client, email);
         registerResponse.EnsureSuccessStatusCode();
+
+        var tokens = await LoginAsync(client, email);
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+
+        return (client, email, tokens);
+    }
+
+    // Direct database promotion — the only way User.Role can ever become "admin" (no public
+    // endpoint accepts a role). Must run before login, since the role claim is baked into the
+    // access token at issuance (IdentityEndpoints.IssueAccessToken).
+    public static async Task PromoteToAdminAsync(QuotesApiFactory factory, string email)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<QuotesDbContext>();
+        var user = await db.Set<User>().FirstAsync(u => u.Email == email);
+        user.Role = "admin";
+        await db.SaveChangesAsync();
+    }
+
+    // Registers a fresh unique user, promotes it to admin directly in the database, then logs
+    // in — the resulting client's JWT carries "role": "admin" and can pass the
+    // "diagnostics-admin" policy.
+    public static async Task<(HttpClient Client, string Email, TokenResponse Tokens)> CreateAdminClientAsync(
+        QuotesApiFactory factory, string label)
+    {
+        var client = factory.CreateClient();
+        var email = UniqueEmail(label);
+
+        (await RegisterAsync(client, email)).EnsureSuccessStatusCode();
+        await PromoteToAdminAsync(factory, email);
 
         var tokens = await LoginAsync(client, email);
         client.DefaultRequestHeaders.Authorization =

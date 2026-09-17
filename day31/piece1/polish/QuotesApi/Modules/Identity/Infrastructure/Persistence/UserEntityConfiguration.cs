@@ -20,6 +20,11 @@ public sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(100);
 
+        entity.Property(u => u.Role)
+            .IsRequired()
+            .HasMaxLength(20)
+            .HasDefaultValue("user");
+
         // Registration checks for an existing email before inserting, but only this
         // index actually prevents two concurrent registrations for the same address
         // from both passing that check and creating duplicate accounts.

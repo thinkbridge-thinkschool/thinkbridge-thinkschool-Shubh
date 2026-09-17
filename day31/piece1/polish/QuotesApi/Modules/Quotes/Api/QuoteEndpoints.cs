@@ -126,11 +126,16 @@ public static class QuoteEndpoints
         // next request(s) into a genuine cache miss for the stampede test.
         //
         // Day 27: these expose internal operational state and can degrade other users'
-        // experience (resetting shared counters, evicting shared cache entries), so they now
-        // require an authenticated caller — this app has no admin/role concept yet, so "any
-        // logged-in user" is the strongest boundary available without inventing one (see the
-        // STRIDE doc's residual-risk note).
-        var diagnostics = app.MapGroup("/api/v1/diagnostics").RequireAuthorization();
+        // experience (resetting shared counters, evicting shared cache entries), so they
+        // require an authenticated caller.
+        //
+        // Day 31: "any logged-in user" (the Day 27 boundary) was flagged as a residual risk —
+        // any authenticated user, not just an operator, could reset shared counters or evict
+        // another user's cached quote. Now requires the "diagnostics-admin" policy
+        // (QuotesModuleExtensions), satisfied only by a JWT whose "role" claim is "admin" —
+        // an unauthenticated caller still gets 401, but a normal authenticated user now gets
+        // 403 instead of being let through.
+        var diagnostics = app.MapGroup("/api/v1/diagnostics").RequireAuthorization("diagnostics-admin");
 
         diagnostics.MapGet("/db-queries", (DbQueryCounter counter) =>
             Results.Ok(new

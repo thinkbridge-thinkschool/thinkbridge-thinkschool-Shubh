@@ -103,7 +103,8 @@ public static class IdentityEndpoints
                 return Results.Json(
                     new { id = user.Id, email = user.Email },
                     statusCode: StatusCodes.Status201Created);
-            });
+            })
+            .RequireRateLimiting("auth");
 
         // LOGIN
         app.MapPost(
@@ -161,7 +162,8 @@ public static class IdentityEndpoints
                     refresh_token = refreshToken,
                     expires_in = (int)TimeSpan.FromMinutes(expiresInMinutes).TotalSeconds
                 });
-            });
+            })
+            .RequireRateLimiting("auth");
 
         // LOGOUT
         app.MapPost(
@@ -317,7 +319,16 @@ public static class IdentityEndpoints
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim("scope", "quotes.write")
+            new Claim("scope", "quotes.write"),
+            // Day 31: carries User.Role into the token so the "diagnostics-admin" policy
+            // (QuotesModuleExtensions) can check it without a DB round trip per request.
+            // Every user is "user" unless promoted directly in the database — nothing in
+            // the public API can ever set this to "admin". Uses the long ClaimTypes.Role URI
+            // (like NameIdentifier/Email above) rather than the short "role" JWT name, which
+            // JwtBearer's default inbound claim mapping would otherwise silently rewrite to
+            // this same long form on validation anyway — issuing it directly avoids a policy
+            // that checks one name while the validated principal actually carries the other.
+            new Claim(ClaimTypes.Role, user.Role)
         };
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),

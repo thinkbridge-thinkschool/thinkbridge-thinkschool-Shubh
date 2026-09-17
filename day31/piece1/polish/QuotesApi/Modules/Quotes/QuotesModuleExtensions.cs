@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 using QuotesApi.Modules.Quotes.Api.Authorization;
 using QuotesApi.Modules.Quotes.Application;
 using QuotesApi.Modules.Quotes.Infrastructure;
+using System.Security.Claims;
 
 namespace QuotesApi.Modules.Quotes;
 
@@ -59,6 +60,21 @@ public static class QuotesModuleExtensions
             options.AddPolicy(
                 "can-delete-own-quote",
                 policy => policy.Requirements.Add(new OwnsQuoteRequirement()));
+
+            // Day 31: the diagnostics group used to accept "any authenticated user" —
+            // documented in Stage 1's security audit as a residual risk (any logged-in user
+            // could reset shared counters or evict another user's cached quote). This
+            // requires the role claim IdentityEndpoints now issues to actually be "admin",
+            // which only a direct database update can grant (see User.Role).
+            //
+            // Uses ClaimTypes.Role (the long URI), not the short "role" JWT claim name: the
+            // JwtBearer handler's default inbound claim mapping silently rewrites an incoming
+            // "role" claim to ClaimTypes.Role during validation (the same reason
+            // IdentityEndpoints already issues NameIdentifier/Email in their long form) — a
+            // policy checking the short name would never match a real validated token.
+            options.AddPolicy(
+                "diagnostics-admin",
+                policy => policy.RequireClaim(ClaimTypes.Role, "admin"));
         });
         services.AddScoped<IAuthorizationHandler, OwnsQuoteHandler>();
 

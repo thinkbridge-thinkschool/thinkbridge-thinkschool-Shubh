@@ -76,6 +76,13 @@ namespace QuotesApi.Shared.Migrations.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("user");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")

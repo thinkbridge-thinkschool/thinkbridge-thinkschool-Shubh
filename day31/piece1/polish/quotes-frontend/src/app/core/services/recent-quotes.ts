@@ -3,7 +3,7 @@ import { Quotes } from './quotes';
 import { Quote } from '../models/quote.models';
 
 const STORAGE_KEY = 'quotesapi.recent_quote_ids';
-const MAX_RECENTS = 6;
+const MAX_RECENTS = 3;
 
 // There is no "recently viewed" concept anywhere in the QuotesApi backend — no
 // endpoint, no column, no event. Recents is therefore purely a local record of

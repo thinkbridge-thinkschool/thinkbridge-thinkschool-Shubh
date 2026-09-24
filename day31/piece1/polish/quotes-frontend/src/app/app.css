@@ -1,0 +1,6 @@
+/* The shell is a viewport-height three-column grid, so the root host has to be
+   a full-height block for that grid to have something to fill. */
+:host {
+  display: block;
+  height: 100%;
+}

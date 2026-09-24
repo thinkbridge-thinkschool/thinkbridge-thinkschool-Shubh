@@ -1,12 +1,29 @@
-.collections-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+:host {
+  display: block;
+  min-height: 0;
+  overflow-y: auto;
 }
 
-.collections-panel__title {
-  margin: 0;
-  font-size: 1.3rem;
+.collections {
+  padding: var(--space-6);
+  max-width: 64rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.collections__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.collections__header .t-meta {
+  margin-top: var(--space-1);
+  max-width: 52ch;
+  line-height: 1.5;
 }
 
 .collection-list {
@@ -19,12 +36,33 @@
 }
 
 .collection-card {
-  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.collection-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .collection-card__name {
-  margin: 0 0 var(--space-3);
-  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--color-primary);
+}
+
+.collection-card__count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
 
 .collection-card__items {
@@ -39,28 +77,51 @@
 .collection-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-raised);
+  transition: border-color 0.15s ease;
 }
 
-.collection-item:first-child {
-  border-top: none;
+.collection-item:hover {
+  border-color: var(--color-border-strong);
 }
 
 .collection-item__link {
-  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .collection-item__link:hover {
-  color: var(--color-primary);
   text-decoration: underline;
 }
 
-@media (max-width: 560px) {
+/* Pushes the remove button to the right edge; the added date is real data from
+   the collection item, unlike the quote itself, which carries no timestamp. */
+.collection-item__added {
+  flex: 1;
+}
+
+@media (max-width: 767px) {
+  .collections {
+    padding: var(--space-5) var(--space-4);
+  }
+
   .collection-item {
     flex-wrap: wrap;
+  }
+
+  .collection-item__added {
+    flex-basis: 100%;
+    order: 3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-item {
+    transition: none;
   }
 }

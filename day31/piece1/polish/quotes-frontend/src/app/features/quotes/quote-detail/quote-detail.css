@@ -1,149 +1,154 @@
 .detail {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) var(--space-6);
+  max-width: 52rem;
 }
 
 .detail__back {
-  align-self: flex-start;
-  font-size: 0.85rem;
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
   color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .detail__back:hover {
   color: var(--color-primary);
 }
 
-.detail__placeholder,
-.detail__skeleton,
-.detail__card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-5);
-}
-
-.detail__placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--space-2);
-  padding: var(--space-6) var(--space-5);
-  border-style: dashed;
-  border-color: var(--color-border-strong);
-}
-
-.detail__placeholder-icon {
-  font-size: 2rem;
-  color: var(--color-text-muted);
-  line-height: 1;
-}
-
-.detail__placeholder-title {
-  font-weight: 650;
-  color: var(--color-text);
-}
-
-.detail__placeholder-text {
-  color: var(--color-text-secondary);
-  font-size: 0.88rem;
-  max-width: 32ch;
-}
-
 .detail__skeleton {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
-.skeleton-line--lg {
-  height: 1.3rem;
-  width: 90%;
+.detail__placeholder {
+  margin-top: var(--space-6);
 }
 
-.skeleton-line--md {
-  height: 1.3rem;
-  width: 70%;
-}
-
-.skeleton-line--sm {
-  height: 0.9rem;
-  width: 40%;
-  margin-top: var(--space-2);
-}
-
-.skeleton-line--pill {
-  height: 1.6rem;
-  width: 55%;
-  border-radius: 999px;
-  margin-top: var(--space-3);
-}
-
-.detail__error {
+.detail__card {
   display: flex;
   flex-direction: column;
+  gap: var(--space-5);
+}
+
+.detail__head {
+  display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .detail__eyebrow {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-primary-hover);
-  margin-bottom: var(--space-3);
-}
-
-.detail__text {
-  margin: 0 0 var(--space-3);
-  font-size: 1.35rem;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--color-text);
-}
-
-.detail__text::before {
-  content: "\201C";
-}
-
-.detail__text::after {
-  content: "\201D";
+  color: var(--color-text-muted);
 }
 
 .detail__author {
-  margin: 0 0 var(--space-5);
-  color: var(--color-text-secondary);
-  font-style: italic;
+  margin-top: var(--space-1);
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.detail__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* The passage is the point of the screen: it is the only display-sized text,
+   set on the raised surface with an amber rule down its left edge so it reads
+   as a pulled quote rather than another paragraph. */
+.detail__text {
+  margin: 0;
+  padding: var(--space-5) var(--space-5) var(--space-5) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  font-size: 1.25rem;
+  line-height: 1.65;
+  color: var(--color-text);
 }
 
 .detail__meta {
   margin: 0;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 0;
+  border-top: 1px solid var(--color-border);
 }
 
 .detail__meta-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: var(--space-4);
   align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  font-size: 0.85rem;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .detail__meta-row dt {
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--color-text-muted);
 }
 
 .detail__meta-row dd {
   margin: 0;
+  font-size: 0.9rem;
   color: var(--color-text);
+}
+
+.detail__collections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.detail__collection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-badge-bg);
+  color: var(--color-badge-fg);
+  font-size: 0.78rem;
   font-weight: 600;
-  text-align: right;
+}
+
+@media (max-width: 1199px) {
+  .detail {
+    padding: var(--space-5);
+  }
+
+  .detail__author {
+    font-size: 1.6rem;
+  }
+}
+
+/* Mobile is the only breakpoint where the list isn't on screen beside this
+   panel, so it's the only one where a back link has anywhere to go. */
+@media (max-width: 767px) {
+  .detail__back {
+    display: inline-flex;
+  }
+
+  .detail__text {
+    font-size: 1.1rem;
+    padding: var(--space-4);
+  }
+
+  .detail__meta-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
 }

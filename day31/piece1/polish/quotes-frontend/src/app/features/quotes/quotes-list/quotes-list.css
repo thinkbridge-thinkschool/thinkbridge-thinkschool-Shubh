@@ -1,86 +1,51 @@
-.quotes-list-panel {
+:host {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  min-height: 0;
+}
+
+.quotes-list-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.quotes-list__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.quotes-list__heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.quotes-list__count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.quotes-list__filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.quotes-list__notice {
+  margin: var(--space-4) var(--space-5) 0;
+}
+
+.quotes-list__body {
+  padding: var(--space-4) var(--space-4) var(--space-5);
 }
 
 .list-status {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-}
-
-.author-search {
-  flex-wrap: wrap;
-}
-
-.author-search .input {
-  flex: 1 1 12rem;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.pagination__current {
-  min-width: 4.5rem;
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-}
-
-.page-size {
-  margin-left: auto;
-}
-
-.state {
-  padding: var(--space-5);
-  text-align: center;
-  color: var(--color-text-secondary);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-}
-
-.state--loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-}
-
-.state--error {
-  text-align: left;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.list-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.list-skeleton__card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
 }
 
 .quote-list {
@@ -89,45 +54,86 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
+/* Card. `position: relative` is load-bearing: the link inside stretches over
+   the whole card via ::after, so the entire card is one click target without
+   nesting interactive elements or wrapping the delete button in a link. */
 .quote-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.15s ease, border-color 0.15s ease,
-    transform 0.1s ease;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .quote-card:hover {
-  box-shadow: var(--shadow-md);
+  background: var(--color-surface-hover);
   border-color: var(--color-border-strong);
 }
 
-.quote-card__text {
-  margin: 0 0 var(--space-2);
-  font-size: 1.1rem;
-  font-weight: 500;
-  line-height: 1.45;
-  color: var(--color-text);
+/* Selected card: raised surface plus an amber left bar, so the active row is
+   never indicated by colour alone. */
+.quote-card:has(.quote-card__link--active) {
+  background: var(--color-surface-active);
+  border-color: var(--color-border-strong);
+  border-left-color: var(--color-primary);
 }
 
-.quote-card__text::before {
-  content: "\201C";
+/* The card's focus ring has to come from the link inside it, since the link is
+   what actually receives focus. */
+.quote-card:has(.quote-card__link:focus-visible) {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
-.quote-card__text::after {
-  content: "\201D";
+.quote-card__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.quote-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.quote-card__link:focus-visible {
+  outline: none;
 }
 
 .quote-card__author {
-  margin: 0 0 var(--space-3);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.quote-card:has(.quote-card__link--active) .quote-card__author {
+  color: var(--color-primary);
+}
+
+/* Preview, not the whole passage: the full text is what the detail column is
+   for, and unclamped quotes would make card heights wildly uneven. */
+.quote-card__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  font-size: 0.85rem;
+  line-height: 1.5;
   color: var(--color-text-secondary);
-  font-style: italic;
-  font-size: 0.9rem;
 }
 
 .quote-card__footer {
@@ -136,42 +142,73 @@
   justify-content: space-between;
   gap: var(--space-3);
   flex-wrap: wrap;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
 }
 
 .quote-card__meta {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--color-text-muted);
 }
 
+/* Quiet until wanted: a red button on every owned card competes with the quote
+   itself for attention. It keeps the .btn--danger semantics (and its hover and
+   focus treatment) but sits back visually until the card is hovered or the
+   button itself is focused. */
+.quote-card__delete {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-muted);
+}
+
+.quote-card:hover .quote-card__delete,
+.quote-card__delete:focus-visible {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+/* Lifted above the stretched link so the delete button stays clickable. */
 .quote-card__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Pinned footer: paging stays reachable without scrolling a long list back up. */
+.quotes-list__toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-raised);
+}
+
+.pagination {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-@media (max-width: 560px) {
-  .toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.pagination__current {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
 
-  .page-size {
-    margin-left: 0;
-    justify-content: space-between;
-  }
+.page-size .field__label {
+  font-size: 0.72rem;
+}
 
-  .pagination {
-    justify-content: space-between;
-  }
+.page-size .select {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.78rem;
+}
 
-  .quote-card__footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .quote-card__actions {
-    justify-content: flex-end;
+@media (prefers-reduced-motion: reduce) {
+  .quote-card {
+    transition: none;
   }
 }

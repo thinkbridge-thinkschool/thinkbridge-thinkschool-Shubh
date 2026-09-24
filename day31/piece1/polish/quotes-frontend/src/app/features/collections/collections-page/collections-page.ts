@@ -1,14 +1,16 @@
+import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Collections } from '../../../core/services/collections';
 import { Collection } from '../../../core/models/collection.models';
 import { AppError } from '../../../core/models/app-error.models';
+import { Icon } from '../../../shared/ui/icon/icon';
 
 type CollectionsStatus = 'loading' | 'loaded' | 'error';
 
 @Component({
   selector: 'app-collections-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon, DatePipe],
   templateUrl: './collections-page.html',
   styleUrl: './collections-page.css',
 })

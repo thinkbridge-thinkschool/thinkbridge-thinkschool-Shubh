@@ -32,11 +32,17 @@ test('register, login, create a quote, and see it appear in the list', async ({ 
   await expect(page.getByRole('heading', { name: 'Quotes' })).toBeVisible();
 
   // 3. Create a quote (the quote form only renders while authenticated).
+  // The form now lives in a modal opened from the navigation rail's "New Quote"
+  // button instead of sitting inline under the list — the form, its field ids
+  // and its validation are unchanged, it just has to be opened first.
+  await page.getByRole('button', { name: 'New Quote' }).click();
   await page.locator('#author').fill(author);
   await page.locator('#text').fill(text);
   await page.getByRole('button', { name: 'Create quote' }).click();
 
-  // The form's own success banner confirms the POST succeeded.
+  // The success banner confirms the POST succeeded. It is rendered by the list
+  // (from QuoteForm's `created` output) rather than inside the form, because a
+  // successful create closes the dialog.
   await expect(page.getByRole('status').filter({ hasText: `Quote by ${author} was created.` })).toBeVisible();
 
   // 4. Verify the created quote is visibly rendered in the list (onQuoteCreated()

@@ -3,31 +3,34 @@
    files add only per-component layout on top of these. */
 
 :root {
-  --color-bg: #0a0b0f;
-  --color-bg-raised: #101319;
-  --color-surface: #151922;
-  --color-surface-hover: #1b2029;
-  --color-border: #262b37;
-  --color-border-strong: #363c4c;
-  --color-text: #edeef2;
-  --color-text-secondary: #a3a9bb;
-  --color-text-muted: #7d84a0;
-  --color-primary: #7c6df0;
-  --color-primary-hover: #9385f5;
-  --color-primary-fg: #ffffff;
-  /* Darker than --color-primary specifically for solid fills carrying
-     --color-primary-fg text: #7c6df0 gives only 3.96:1 against white,
-     below WCAG AA's 4.5:1 (confirmed via Lighthouse color-contrast audit).
-     --color-primary itself stays unchanged since it's also used as link/
-     accent text color on dark backgrounds, where it already reads fine. */
-  --color-primary-solid: #6a5cd9;
-  --color-danger: #f0677a;
-  --color-danger-bg: #2a151b;
-  --color-danger-border: #4a2530;
-  --color-badge-bg: rgba(124, 109, 240, 0.16);
-  --color-badge-fg: #b7acf8;
-  --color-focus-ring: #9c8ffb;
-  --color-success: #3ecf8e;
+  /* QuoteApi palette: deep blue-black ink canvas, slightly warm raised panels,
+     and a brass/amber accent that reads like a highlighted passage. Every
+     pairing below was checked for WCAG AA (4.5:1 body / 3:1 large + UI). */
+  --color-bg: #0b0d12;
+  --color-bg-raised: #111520;
+  --color-surface: #161b28;
+  --color-surface-hover: #1d2432;
+  --color-surface-active: #232b3c;
+  --color-border: #232938;
+  --color-border-strong: #333b4e;
+  --color-text: #f2efe9;
+  --color-text-secondary: #aab0c2;
+  --color-text-muted: #838aa1;
+  /* Amber reads as accent *text* on the dark canvas (#e0a34a on #0b0d12 is
+     ~9.3:1), so it stays the link/active colour. */
+  --color-primary: #e0a34a;
+  --color-primary-hover: #eeb663;
+  /* Solid fills carry dark ink text instead of white: #d4922f with
+     --color-primary-fg gives ~7:1, where amber-on-white would fail outright. */
+  --color-primary-solid: #d4922f;
+  --color-primary-fg: #17110a;
+  --color-danger: #ef7a6d;
+  --color-danger-bg: #2a1614;
+  --color-danger-border: #4a2823;
+  --color-badge-bg: rgba(224, 163, 74, 0.14);
+  --color-badge-fg: #efc182;
+  --color-focus-ring: #f0b866;
+  --color-success: #56c98d;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -43,8 +46,14 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  /* Three-column workspace geometry, shared by the shell and the quotes page
+     so the two grids can never drift apart. */
+  --rail-width: 280px;
+  --list-width: 380px;
+
+  --font-sans: "Mulish", "Avenir Next LT Pro", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
 
   color-scheme: dark;
 }
@@ -144,7 +153,7 @@ a {
 
 .input[aria-invalid='true']:focus,
 .textarea[aria-invalid='true']:focus {
-  box-shadow: 0 0 0 3px rgba(240, 103, 122, 0.22);
+  box-shadow: 0 0 0 3px rgba(239, 122, 109, 0.25);
 }
 
 .input,
@@ -175,7 +184,7 @@ a {
 .select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(124, 109, 240, 0.22);
+  box-shadow: 0 0 0 3px rgba(224, 163, 74, 0.25);
 }
 
 .textarea {
@@ -281,8 +290,8 @@ a {
 }
 
 .alert--success {
-  background: rgba(62, 207, 142, 0.12);
-  border-color: rgba(62, 207, 142, 0.35);
+  background: rgba(86, 201, 141, 0.12);
+  border-color: rgba(86, 201, 141, 0.35);
   color: var(--color-success);
 }
 
@@ -318,8 +327,9 @@ a {
 .spinner--inline {
   width: 0.9rem;
   height: 0.9rem;
-  border-color: rgba(255, 255, 255, 0.25);
-  border-top-color: #fff;
+  /* Sits inside a solid amber button, so the track/head are ink, not white. */
+  border-color: rgba(23, 17, 10, 0.3);
+  border-top-color: var(--color-primary-fg);
 }
 
 @keyframes spin {
@@ -361,5 +371,478 @@ a {
 
   .skeleton-line {
     animation: none;
+  }
+}
+
+/* Typography scale. Only the quote text itself gets display-sized treatment —
+   everything else stays quiet so the passage is what the eye lands on. */
+.t-app-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.t-section-title {
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+/* Small uppercase group label above a nav group ("RECENTS", "COLLECTIONS"). */
+.t-rail-heading {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.t-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* Panel: the flat, border-separated surface the three columns are built from.
+   Distinct from .card, which is the raised, rounded object placed *inside* a
+   panel. */
+.panel {
+  background: var(--color-bg-raised);
+  border-right: 1px solid var(--color-border);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel__header {
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  flex: none;
+}
+
+.panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+/* Empty / error blocks, shared by the list, detail and collections views. */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
+  color: var(--color-text-secondary);
+}
+
+.state__icon {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  margin-bottom: var(--space-2);
+}
+
+.state__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.state--empty {
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+/* Native <dialog> shared chrome (New Quote). ::backdrop is what makes the rest
+   of the app recede without a hand-rolled overlay element. */
+.dialog {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 0;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
+  overflow: visible;
+}
+
+.dialog::backdrop {
+  background: rgba(5, 6, 10, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-3);
+}
+
+.dialog__title {
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+
+/* Square icon-only control (bell, close, menu). */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn {
+    transition: none;
+  }
+}
+
+/* Skeleton + error blocks were duplicated per component while only the quotes
+   list and detail used them; the notifications popover and collections view
+   need the same shapes, so the sizes live here once. */
+.list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.list-skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.skeleton-line {
+  height: 0.7rem;
+}
+
+.skeleton-line--lg {
+  height: 1.05rem;
+  width: 82%;
+}
+
+.skeleton-line--md {
+  height: 0.85rem;
+  width: 64%;
+}
+
+.skeleton-line--sm {
+  height: 0.7rem;
+  width: 40%;
+}
+
+.skeleton-line--pill {
+  height: 1.6rem;
+  width: 7rem;
+  border-radius: 999px;
+}
+
+.state--error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* Rail items. Defined globally rather than in shell.css because the
+   notifications trigger is its own component but has to sit in the rail's
+   vertical rhythm as if it were one of the shell's own links. */
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.rail-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.rail-item__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Active/open state: amber text plus a left accent bar, so selection is never
+   signalled by colour alone. */
+.rail-item--active,
+.rail-item--open {
+  background: var(--color-surface-active);
+  border-left-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-item {
+    transition: none;
+  }
+}
+
+/* The outlet element itself is only an insertion anchor; the routed component
+   is rendered as its sibling. Hiding it keeps it from becoming a stray flex or
+   grid item in the three-column layout. */
+router-outlet {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Routed fill.
+
+   These two rules have to be global. A router-created component is not part of
+   the host template's markup, so it never receives that template's _ngcontent
+   attribute — and emulated encapsulation rewrites every selector in a
+   component stylesheet to require exactly that attribute. A
+   `.workspace__main > *` rule written inside shell.css therefore matches
+   nothing at all, which is why the routed page used to compute `flex: 0 1 auto`
+   and size itself to its content instead of to the shell.
+
+   Without them the shell's second column collapses to content height and the
+   middle/right panels stop partway down the viewport while the rail runs to
+   the bottom.
+   --------------------------------------------------------------------------- */
+.workspace__main > *:not(router-outlet) {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.quotes-layout__detail > *:not(router-outlet) {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Wordmark. Global because the rail, the mobile top bar and both auth screens
+   all render the same lockup. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+}
+
+.brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-solid);
+  color: var(--color-primary-fg);
+}
+
+/* ---------------------------------------------------------------------------
+   Auth screens (login + register). Shared here rather than duplicated in two
+   component stylesheets, the same reasoning as .panel and .rail-item: both
+   screens are one design surface, and the two components differ only in which
+   fields they render.
+   --------------------------------------------------------------------------- */
+.auth {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--color-bg);
+}
+
+/* Left half: brand and positioning copy. Deliberately not a quotation — this
+   is product copy, and attributing an invented line to a real person is not
+   something a quotes app should ship. */
+.auth__aside {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-6) clamp(var(--space-6), 7vw, 5rem);
+  background: var(--color-bg-raised);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+/* A single soft amber wash behind the copy. One decorative layer, no animation. */
+.auth__glow {
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(224, 163, 74, 0.16), transparent 68%);
+  pointer-events: none;
+}
+
+.auth__aside-body {
+  position: relative;
+  max-width: 30rem;
+}
+
+.auth__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.auth__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-solid);
+  color: var(--color-primary-fg);
+}
+
+.auth__tagline {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.auth__tagline em {
+  font-style: normal;
+  color: var(--color-primary);
+}
+
+.auth__lede {
+  margin-top: var(--space-4);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 40ch;
+}
+
+/* Right half: the form. */
+.auth__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-5);
+}
+
+.auth-card {
+  width: min(24rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth-card__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.auth-card__subtitle {
+  margin-top: var(--space-1);
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.auth-card .hint {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.auth-card__footer {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* Below the split-screen breakpoint the aside becomes a compact banner above
+   the form instead of disappearing, so the brand is still present. */
+@media (max-width: 899px) {
+  .auth {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .auth__aside {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .auth__brand {
+    margin-bottom: var(--space-4);
+  }
+
+  .auth__mark {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .auth__lede {
+    display: none;
+  }
+
+  .auth__tagline {
+    font-size: 1.4rem;
+  }
+
+  .auth__main {
+    padding: var(--space-5) var(--space-4);
   }
 }

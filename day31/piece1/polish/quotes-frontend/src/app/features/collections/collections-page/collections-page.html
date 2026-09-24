@@ -1,5 +1,14 @@
-<section class="collections-panel" aria-live="polite">
-  <h1 class="collections-panel__title">My Collections</h1>
+<section class="collections" aria-live="polite">
+  <header class="collections__header">
+    <div>
+      <h1 class="t-section-title">My Collections</h1>
+      <p class="t-meta">
+        Collections you own, with the quotes saved in each. Pick one in the navigation rail to
+        filter the quote list.
+      </p>
+    </div>
+    <a class="btn btn--secondary btn--sm" routerLink="/quotes">Back to quotes</a>
+  </header>
 
   @if (removeError()) {
     <p class="alert alert--error" role="alert">{{ removeError() }}</p>
@@ -25,8 +34,9 @@
     @case ('loaded') {
       @if (collections().length === 0) {
         <div class="state state--empty">
-          <p>You don't have any collections yet.</p>
-          <p class="list-status">
+          <app-icon name="folder" [size]="30" class="state__icon" />
+          <p class="state__title">You don't have any collections yet.</p>
+          <p class="t-meta">
             Create one from the "Add to a collection" option when creating a quote.
           </p>
         </div>
@@ -34,10 +44,26 @@
         <ul class="collection-list">
           @for (collection of collections(); track collection.id) {
             <li class="card collection-card">
-              <h2 class="collection-card__name">{{ collection.name }}</h2>
+              <header class="collection-card__header">
+                <h2 class="collection-card__name">
+                  <app-icon name="folder" [size]="17" />
+                  {{ collection.name }}
+                </h2>
+                <span class="collection-card__count">
+                  {{ collection.items.length }}
+                  @switch (collection.items.length) {
+                    @case (1) {
+                      quote
+                    }
+                    @default {
+                      quotes
+                    }
+                  }
+                </span>
+              </header>
 
               @if (collection.items.length === 0) {
-                <p class="list-status">No quotes in this collection yet.</p>
+                <p class="t-meta">No quotes in this collection yet.</p>
               } @else {
                 <ul class="collection-card__items">
                   @for (item of collection.items; track item.quoteId) {
@@ -45,6 +71,9 @@
                       <a class="collection-item__link" [routerLink]="['/quotes', item.quoteId]">
                         Quote #{{ item.quoteId }}
                       </a>
+                      <span class="t-meta collection-item__added">
+                        Added {{ item.addedAt | date: 'MMM d, y' }}
+                      </span>
                       <button
                         type="button"
                         class="btn btn--danger btn--sm"

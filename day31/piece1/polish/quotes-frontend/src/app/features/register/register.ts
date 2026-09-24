@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/services/auth';
+import { Icon } from '../../shared/ui/icon/icon';
 
 type RegisterFieldName = 'email' | 'password' | 'confirmPassword';
 
@@ -21,7 +22,7 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, Icon],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })

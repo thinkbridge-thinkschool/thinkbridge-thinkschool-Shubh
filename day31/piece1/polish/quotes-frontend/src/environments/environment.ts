@@ -1,10 +1,16 @@
-// Day 31 E2E default. Points at the Day 31 backend (day31/piece1/polish/QuotesApi)
-// run locally via `dotnet run` against dedicated ephemeral SQL Server/Redis
-// Testcontainers-style Docker containers — never Azure, and never the day30-sql/
-// day29-redis containers or the port-5300/4200 dev servers already running
-// locally for other days. Update the port here to match whatever --urls the
-// local E2E run actually uses.
+// Day 31 local/E2E default. Points at the Day 31 backend
+// (day31/piece1/polish/QuotesApi) run locally — never Azure, and never another
+// day's backend.
+//
+// 5177 is that project's own launchSettings.json `http` profile port, i.e. what
+// a bare `dotnet run` actually binds. This used to say 5310, which nothing
+// bound unless the backend was started with an explicit
+// `--urls http://localhost:5310`, so a plain `dotnet run` left every request
+// failing with ECONNREFUSED. api-base-url.ts, quotes.characterization.spec.ts
+// and the interceptor specs all already assumed 5177.
+//
+// If you do start the backend on a different port, update it here to match.
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:5310',
+  apiBaseUrl: 'http://localhost:5177',
 };

@@ -1,114 +1,251 @@
-.app-shell {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
+/* Desktop (>=1200px): a viewport-height grid — rail in column one, everything
+   routed in column two, which the quotes page splits again into list + detail.
+   The document never scrolls; each panel owns its overflow. */
+.workspace {
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: var(--rail-width) 1fr;
+  overflow: hidden;
+  background: var(--color-bg);
 }
 
-.navbar {
+.workspace__main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+/* The rule that makes the routed component fill this area lives in the global
+   sheet, not here. Under emulated encapsulation a `.workspace__main > *`
+   selector in this file is rewritten to require the shell's own _ngcontent
+   attribute, which a router-created component never carries — so the rule
+   silently matched nothing. See "routed fill" in src/styles.css. */
+
+/* Only rendered below the 3-column breakpoint (see the media query). */
+.topbar {
+  display: none;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   background: var(--color-bg-raised);
   border-bottom: 1px solid var(--color-border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
-.navbar__inner {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: var(--space-4) var(--space-5);
+.workspace__scrim {
+  display: none;
+}
+
+/* Rail */
+.rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-bg-raised);
+  border-right: 1px solid var(--color-border);
+}
+
+.rail__brand {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.brand__mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-solid);
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.brand__name {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.navbar__links {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.navbar__link {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.navbar__link:hover {
-  color: var(--color-text);
-}
-
-.navbar__link--active {
-  color: var(--color-primary);
-}
-
-.session {
-  display: flex;
-  align-items: center;
   gap: var(--space-3);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+}
+
+.rail__close {
+  display: none;
+}
+
+.rail__search {
+  position: relative;
+  padding: 0 var(--space-4);
+}
+
+.rail__search-icon {
+  position: absolute;
+  left: calc(var(--space-4) + 0.6rem);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.rail__search-input {
+  width: 100%;
+  padding-left: 2.1rem;
   font-size: 0.85rem;
 }
 
-.session__user {
-  position: relative;
-  padding-left: 0.9rem;
-  color: var(--color-text-secondary);
+.rail__new {
+  margin: var(--space-4) var(--space-4) var(--space-2);
+  width: calc(100% - (2 * var(--space-4)));
 }
 
-.session__user::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: var(--color-success);
-}
-
-.app-content {
+/* The rail's only scrolling region; brand, search, New Quote and the account
+   block stay pinned. */
+.rail__scroll {
   flex: 1;
-  padding: var(--space-6) 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
-@media (max-width: 480px) {
-  .navbar__inner {
-    padding: var(--space-3) var(--space-4);
+.rail__group-title,
+.rail__group-header {
+  padding: 0 0.7rem;
+  margin-bottom: var(--space-2);
+}
+
+.rail__group-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.rail__group-header .rail__group-title {
+  padding: 0;
+  margin: 0;
+}
+
+.rail__group-action {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.rail__group-action:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.rail__hint {
+  padding: 0 0.7rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.rail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-item__count {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.rail__more {
+  flex: none;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.rail__account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.rail__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-surface-active);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.rail__account-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.rail__account-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail__account-status {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+/* Tablet and below: the rail leaves the grid and becomes an overlay drawer so
+   the content column keeps full width. The desktop grid above is untouched. */
+@media (max-width: 1199px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
-  .app-content {
-    padding: var(--space-5) 0;
+  .topbar {
+    display: flex;
   }
 
-  .container {
-    padding: 0 var(--space-4);
+  .rail {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: min(var(--rail-width), 86vw);
+    box-shadow: var(--shadow-md);
+    /* visibility, not just transform: a drawer parked off-screen must also
+       leave the tab order and the accessibility tree, or keyboard users tab
+       into a rail they cannot see. */
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease, visibility 0.2s ease;
+  }
+
+  .workspace--rail-open .rail {
+    visibility: visible;
+    transform: none;
+  }
+
+  .rail__close {
+    display: inline-flex;
+  }
+
+  .workspace__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    border: 0;
+    padding: 0;
+    background: rgba(5, 6, 10, 0.6);
+    cursor: default;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail {
+    transition: none;
   }
 }

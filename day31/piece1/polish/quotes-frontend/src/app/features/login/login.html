@@ -1,12 +1,23 @@
-<main class="auth-screen">
-  <div class="auth-screen__glow" aria-hidden="true"></div>
+<main class="auth">
+  <aside class="auth__aside">
+    <div class="auth__glow" aria-hidden="true"></div>
 
-  <div class="auth-screen__content">
-    <div class="auth-brand">
-      <span class="auth-brand__mark" aria-hidden="true">Q</span>
-      <h1 class="auth-brand__name">QuotesApi</h1>
+    <div class="auth__aside-body">
+      <!-- The page's top-level heading is the product, not the tagline: it is
+           what identifies this screen to a screen reader landing on it. -->
+      <h1 class="auth__brand">
+        <span class="auth__mark" aria-hidden="true"><app-icon name="quote" [size]="24" /></span>
+        QuotesApi
+      </h1>
+      <p class="auth__tagline">Keep the passages <em>worth keeping</em>.</p>
+      <p class="auth__lede">
+        QuotesApi is a small library for the lines you want to find again — collected, grouped
+        and searchable.
+      </p>
     </div>
+  </aside>
 
+  <div class="auth__main">
     <form class="card auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="auth-card__header">
         <h2 class="auth-card__title">Welcome back</h2>

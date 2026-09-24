@@ -6,7 +6,15 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Browse and manage quotes with the QuotesApi Angular application.">
+  <meta name="theme-color" content="#0b0d12">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Mulish (geometric-humanist sans) is the only web font the app loads.
+       preconnect first so the stylesheet request doesn't pay for the TLS
+       handshake; display=swap so text paints in the system fallback rather
+       than waiting on the font. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
   <app-root></app-root>

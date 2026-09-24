@@ -1,49 +1,67 @@
+/* The form now lives inside the shared .dialog chrome, which supplies the
+   surface, border and title — so this file only handles the body's rhythm and
+   the collection picker. The form's logic and field ids are unchanged. */
 .quote-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  margin-bottom: 0;
+  padding: var(--space-1) var(--space-5) var(--space-5);
+  max-height: min(70vh, 40rem);
+  overflow-y: auto;
 }
 
-.quote-form__header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.quote-form__title {
-  font-size: 1.3rem;
-}
-
+/* No negative top margin here: .quote-form is an overflow container, and a
+   negative margin on its first child gets clipped by the scroll box. */
 .quote-form__subtitle {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
 }
 
 .quote-form .textarea {
-  min-height: 8rem;
+  min-height: 7rem;
 }
 
 .collection-picker {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-raised);
 }
 
 .collection-picker__modes {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .collection-picker__option {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--color-text);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.collection-picker__option input {
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.collection-picker__option:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Sticky so the submit button stays reachable while a long collection picker
+   scrolls inside the dialog. */
+.quote-form__footer {
+  position: sticky;
+  bottom: 0;
+  padding-top: var(--space-2);
+  background: var(--color-surface);
 }

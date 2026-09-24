@@ -1,0 +1,100 @@
+<div class="notifications">
+  <button
+    type="button"
+    class="rail-item notifications__trigger"
+    [class.rail-item--open]="open()"
+    [attr.aria-expanded]="open()"
+    aria-controls="notifications-popover"
+    (click)="toggle()"
+  >
+    <app-icon name="bell" />
+    <span class="rail-item__label">Notifications</span>
+    @if (unreadCount() > 0) {
+      <span class="notifications__badge">{{ unreadLabel() }}</span>
+    }
+    <span class="sr-only">{{ bellLabel() }}</span>
+  </button>
+
+  @if (open()) {
+    <!-- Click-outside target. A button rather than a bare div so dismissing the
+         popover by pointer uses a real control, and Escape is handled below. -->
+    <button
+      type="button"
+      class="notifications__scrim"
+      tabindex="-1"
+      aria-label="Close notifications"
+      (click)="close()"
+    ></button>
+
+    <div
+      id="notifications-popover"
+      class="notifications__popover"
+      role="group"
+      aria-label="Notifications"
+      (keydown.escape)="close()"
+    >
+      <div class="notifications__header">
+        <h2 class="notifications__title">Notifications</h2>
+        <button type="button" class="icon-btn" (click)="close()">
+          <app-icon name="close" [size]="16" label="Close notifications" />
+        </button>
+      </div>
+
+      <div class="notifications__body">
+        @switch (status()) {
+          @case ('loading') {
+            <div class="list-skeleton" role="status" aria-label="Loading notifications">
+              @for (i of [0, 1, 2]; track i) {
+                <div class="list-skeleton__card">
+                  <div class="skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton-line skeleton-line--sm"></div>
+                </div>
+              }
+            </div>
+          }
+          @case ('error') {
+            <div class="alert alert--error state--error" role="alert">
+              <p>{{ errorMessage() }}</p>
+              <button type="button" class="btn btn--secondary btn--sm" (click)="load()">Retry</button>
+            </div>
+          }
+          @case ('loaded') {
+            @if (notifications().length === 0) {
+              <div class="state">
+                <app-icon name="bell" [size]="28" class="state__icon" />
+                <p class="state__title">No notifications yet</p>
+                <p class="t-meta">Creating a quote raises one for you.</p>
+              </div>
+            } @else {
+              <ul class="notification-list">
+                @for (notification of notifications(); track notification.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="notification"
+                      [class.notification--unread]="!notification.isRead"
+                      (click)="activate(notification)"
+                    >
+                      <span class="notification__dot" aria-hidden="true"></span>
+                      <span class="notification__content">
+                        <span class="notification__message">{{ notification.message }}</span>
+                        <span class="notification__meta">
+                          <span class="notification__type">{{ notification.type }}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{{ notification.createdAtUtc | date: 'MMM d, y, h:mm a' }}</span>
+                          @if (!notification.isRead) {
+                            <span class="badge">Unread</span>
+                          }
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+      </div>
+    </div>
+  }
+</div>

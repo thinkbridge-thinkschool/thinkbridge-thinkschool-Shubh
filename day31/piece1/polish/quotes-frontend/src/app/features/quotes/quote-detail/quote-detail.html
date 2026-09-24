@@ -1,5 +1,10 @@
 <section class="detail" aria-live="polite">
-  <a class="detail__back" routerLink="/quotes">&larr; Back to quotes</a>
+  <!-- Only visible on mobile, where the list and detail share one column; on
+       desktop both are on screen so there is nothing to go back to. -->
+  <a class="detail__back" routerLink="/quotes">
+    <app-icon name="back" [size]="16" />
+    Back to quotes
+  </a>
 
   @switch (status()) {
     @case ('loading') {
@@ -11,21 +16,21 @@
       </div>
     }
     @case ('invalid') {
-      <div class="detail__placeholder" role="alert">
-        <span class="detail__placeholder-icon" aria-hidden="true">&#10077;</span>
-        <p class="detail__placeholder-title">Invalid quote ID</p>
-        <p class="detail__placeholder-text">"{{ rawId() }}" isn't a valid quote ID.</p>
+      <div class="state detail__placeholder" role="alert">
+        <app-icon name="quote" [size]="30" class="state__icon" />
+        <p class="state__title">Invalid quote ID</p>
+        <p class="t-meta">"{{ rawId() }}" isn't a valid quote ID.</p>
       </div>
     }
     @case ('not-found') {
-      <div class="detail__placeholder" role="alert">
-        <span class="detail__placeholder-icon" aria-hidden="true">&#10077;</span>
-        <p class="detail__placeholder-title">Quote not found</p>
-        <p class="detail__placeholder-text">{{ errorMessage() }}</p>
+      <div class="state detail__placeholder" role="alert">
+        <app-icon name="quote" [size]="30" class="state__icon" />
+        <p class="state__title">Quote not found</p>
+        <p class="t-meta">{{ errorMessage() }}</p>
       </div>
     }
     @case ('error') {
-      <div class="alert alert--error detail__error" role="alert">
+      <div class="alert alert--error state--error detail__error" role="alert">
         <p>{{ errorMessage() }}</p>
         <button type="button" class="btn btn--secondary btn--sm" (click)="retry()">Retry</button>
       </div>
@@ -33,10 +38,43 @@
     @case ('loaded') {
       @if (quote(); as q) {
         <article class="detail__card">
-          <p class="detail__eyebrow">Quote #{{ q.id }}</p>
-          <blockquote class="detail__text">{{ q.text }}</blockquote>
-          <p class="detail__author">&mdash; {{ q.author || 'Unknown' }}</p>
+          <header class="detail__head">
+            <div>
+              <p class="detail__eyebrow">Quote #{{ q.id }}</p>
+              <h2 class="detail__author">{{ q.author || 'Unknown' }}</h2>
+            </div>
 
+            @if (canDelete()) {
+              <div class="detail__actions">
+                <button
+                  type="button"
+                  class="btn btn--danger btn--sm"
+                  (click)="deleteQuote()"
+                  [disabled]="deleting()"
+                >
+                  <app-icon name="trash" [size]="15" />
+                  @switch (deleting()) {
+                    @case (true) {
+                      Deleting…
+                    }
+                    @default {
+                      Delete
+                    }
+                  }
+                </button>
+              </div>
+            }
+          </header>
+
+          @if (deleteError()) {
+            <p class="alert alert--error" role="alert">{{ deleteError() }}</p>
+          }
+
+          <blockquote class="detail__text">{{ q.text }}</blockquote>
+
+          <!-- Only fields the Quote entity actually carries, plus real
+               collection membership from GET /api/v1/collections/mine. The
+               backend records no creation date for a quote, so none is shown. -->
           <dl class="detail__meta">
             <div class="detail__meta-row">
               <dt>Author</dt>
@@ -44,12 +82,30 @@
             </div>
             <div class="detail__meta-row">
               <dt>Owner</dt>
-              <dd>User #{{ q.userId }}</dd>
+              <dd>
+                User #{{ q.userId }}
+                @if (canDelete()) {
+                  <span class="badge">You</span>
+                }
+              </dd>
             </div>
             <div class="detail__meta-row">
               <dt>Quote ID</dt>
               <dd>{{ q.id }}</dd>
             </div>
+            @if (containingCollections().length > 0) {
+              <div class="detail__meta-row">
+                <dt>Collections</dt>
+                <dd class="detail__collections">
+                  @for (collection of containingCollections(); track collection.id) {
+                    <span class="detail__collection">
+                      <app-icon name="folder" [size]="14" />
+                      {{ collection.name }}
+                    </span>
+                  }
+                </dd>
+              </div>
+            }
           </dl>
         </article>
       }

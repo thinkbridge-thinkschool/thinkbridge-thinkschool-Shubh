@@ -1,30 +1,170 @@
-<div class="app-shell">
-  <header class="navbar">
-    <div class="navbar__inner">
-      <div class="brand">
-        <span class="brand__mark" aria-hidden="true">Q</span>
-        <span class="brand__name">QuotesApi</span>
-      </div>
-
-      <nav class="navbar__links">
-        <a routerLink="/quotes" routerLinkActive="navbar__link--active" class="navbar__link">
-          Quotes
-        </a>
-        <a routerLink="/collections" routerLinkActive="navbar__link--active" class="navbar__link">
-          My Collections
-        </a>
-      </nav>
-
-      <div class="session">
-        <span class="session__user">{{ auth.currentUserEmail() }}</span>
-        <button type="button" class="btn btn--ghost btn--sm" (click)="logout()">Log out</button>
-      </div>
-    </div>
+<div class="workspace" [class.workspace--rail-open]="shell.railOpen()">
+  <!-- Compact top bar, only rendered below the 3-column breakpoint: it owns the
+       drawer toggle so the rail itself never has to be on screen to be opened. -->
+  <header class="topbar">
+    <button
+      type="button"
+      class="icon-btn"
+      [attr.aria-expanded]="shell.railOpen()"
+      aria-controls="workspace-rail"
+      (click)="shell.toggleRail()"
+    >
+      <app-icon name="menu" [size]="20" label="Open navigation" />
+    </button>
+    <span class="brand brand--compact">
+      <span class="brand__mark" aria-hidden="true"><app-icon name="quote" [size]="16" /></span>
+      <span class="t-app-title">QuotesApi</span>
+    </span>
   </header>
 
-  <main class="app-content">
-    <div class="container">
-      <router-outlet />
+  <!-- Dismiss target for the drawer. Only reachable while the drawer is open. -->
+  @if (shell.railOpen()) {
+    <button
+      type="button"
+      class="workspace__scrim"
+      tabindex="-1"
+      aria-label="Close navigation"
+      (click)="shell.closeRail()"
+    ></button>
+  }
+
+  <nav id="workspace-rail" class="rail" aria-label="Main">
+    <div class="rail__brand">
+      <span class="brand">
+        <span class="brand__mark" aria-hidden="true"><app-icon name="quote" [size]="18" /></span>
+        <span class="t-app-title">QuotesApi</span>
+      </span>
+      <button type="button" class="icon-btn rail__close" (click)="shell.closeRail()">
+        <app-icon name="close" [size]="18" label="Close navigation" />
+      </button>
     </div>
+
+    <!-- The Day 31 backend's GET /api/v1/quotes takes only page and size, so the
+         author parameter this box sends is accepted and ignored server-side.
+         The control and the request it makes are unchanged from the previous
+         UI; only its position and styling moved. -->
+    <form class="rail__search" role="search" (submit)="onSearchSubmit($event)">
+      <label class="sr-only" for="authorSearch">Search by author</label>
+      <span class="rail__search-icon" aria-hidden="true"><app-icon name="search" [size]="16" /></span>
+      <input
+        id="authorSearch"
+        class="input rail__search-input"
+        type="search"
+        autocomplete="off"
+        placeholder="Search by author"
+        [value]="shell.searchInput()"
+        (input)="shell.searchInput.set($any($event.target).value)"
+      />
+      <!-- Present so the form has an explicit submit control, but out of the
+           tab order: it is visually hidden, and Enter in the input submits. -->
+      <button type="submit" class="sr-only" tabindex="-1">Search</button>
+    </form>
+
+    <button type="button" class="btn btn--primary btn--block rail__new" (click)="shell.requestNewQuote()">
+      <app-icon name="plus" [size]="16" />
+      New Quote
+    </button>
+
+    <div class="rail__scroll">
+      <section class="rail__group">
+        <h2 class="t-rail-heading rail__group-title">Library</h2>
+        <button
+          type="button"
+          class="rail-item"
+          [class.rail-item--active]="shell.selectedCollectionId() === null"
+          (click)="showAllQuotes()"
+        >
+          <app-icon name="layers" />
+          <span class="rail-item__label">All Quotes</span>
+        </button>
+      </section>
+
+      <section class="rail__group">
+        <h2 class="t-rail-heading rail__group-title">Recents</h2>
+        @if (recents.isEmpty()) {
+          <p class="rail__hint">Quotes you open appear here.</p>
+        } @else {
+          <ul class="rail__list">
+            @for (quote of recents.quotes(); track quote.id) {
+              <li>
+                <a
+                  class="rail-item"
+                  routerLinkActive="rail-item--active"
+                  [routerLink]="['/quotes', quote.id]"
+                  [title]="quote.text"
+                  (click)="shell.closeRail()"
+                >
+                  <app-icon name="clock" />
+                  <span class="rail-item__label">{{ quote.author || 'Unknown' }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="rail__group">
+        <div class="rail__group-header">
+          <h2 class="t-rail-heading rail__group-title">Collections</h2>
+          <a class="rail__group-action" routerLink="/collections" (click)="shell.closeRail()">Manage</a>
+        </div>
+
+        @switch (collectionsStatus()) {
+          @case ('loading') {
+            <p class="rail__hint">Loading collections…</p>
+          }
+          @case ('error') {
+            <p class="rail__hint">Collections couldn't be loaded.</p>
+          }
+          @case ('loaded') {
+            @if (collections().length === 0) {
+              <p class="rail__hint">No collections yet. Add one while creating a quote.</p>
+            } @else {
+              <ul class="rail__list">
+                @for (collection of collections(); track collection.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="rail-item"
+                      [class.rail-item--active]="shell.selectedCollectionId() === collection.id"
+                      [attr.aria-pressed]="shell.selectedCollectionId() === collection.id"
+                      (click)="selectCollection(collection)"
+                    >
+                      <app-icon name="folder" />
+                      <span class="rail-item__label">{{ collection.name }}</span>
+                      <span class="rail-item__count">{{ collection.items.length }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+      </section>
+    </div>
+
+    <!-- Pinned rather than inside .rail__scroll: that container scrolls, which
+         would clip the notifications popover against the rail's edge. Keeping
+         it out also means notifications stay reachable with a long collection
+         list. -->
+    <section class="rail__more">
+      <h2 class="t-rail-heading rail__group-title">More</h2>
+      <app-notifications-panel />
+    </section>
+
+    <div class="rail__account">
+      <span class="rail__avatar" aria-hidden="true">{{ accountInitial() }}</span>
+      <span class="rail__account-text">
+        <span class="rail__account-name" [title]="auth.currentUserEmail() ?? ''">{{ accountName() }}</span>
+        <span class="rail__account-status">Signed in</span>
+      </span>
+      <button type="button" class="icon-btn" (click)="logout()">
+        <app-icon name="logout" [size]="18" label="Log out" />
+      </button>
+    </div>
+  </nav>
+
+  <main class="workspace__main">
+    <router-outlet />
   </main>
 </div>

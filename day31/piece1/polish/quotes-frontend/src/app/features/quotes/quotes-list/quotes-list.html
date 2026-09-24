@@ -1,138 +1,163 @@
-<section class="quotes-list-panel">
-  <p class="list-status">{{ pageDescription() }}</p>
+<div class="panel quotes-list-panel">
+  <header class="panel__header quotes-list__header">
+    <div class="quotes-list__heading">
+      <h1 class="t-section-title">{{ sectionTitle() }}</h1>
+      @if (sectionCount() !== null) {
+        <span class="quotes-list__count">{{ sectionCount() }}</span>
+      }
+    </div>
 
-  @if (auth.isAuthenticated()) {
-    <app-quote-form (created)="onQuoteCreated()" />
+    @if (inCollectionMode()) {
+      <p class="t-meta">Quotes saved in this collection.</p>
+    } @else {
+      <p class="t-meta list-status">{{ pageDescription() }}</p>
+    }
+
+    @if (appliedAuthorFilter()) {
+      <p class="quotes-list__filter list-status">
+        <span>Filtering by author: "{{ appliedAuthorFilter() }}"</span>
+        <button type="button" class="btn btn--secondary btn--sm" (click)="clearAuthorFilter()">
+          Clear
+        </button>
+      </p>
+    }
+  </header>
+
+  @if (createdMessage(); as message) {
+    <p class="alert alert--success quotes-list__notice" role="status">{{ message }}</p>
   }
 
   @if (deleteError()) {
-    <p class="alert alert--error" role="alert">{{ deleteError() }}</p>
+    <p class="alert alert--error quotes-list__notice" role="alert">{{ deleteError() }}</p>
   }
 
-  <div class="field field--inline author-search">
-    <label class="field__label" for="authorSearch">Search by author</label>
-    <input
-      id="authorSearch"
-      class="input"
-      type="text"
-      autocomplete="off"
-      placeholder="e.g. Mark Twain"
-      [value]="authorFilterInput()"
-      (input)="authorFilterInput.set($any($event.target).value)"
-      (keyup.enter)="applyAuthorFilter()"
-    />
-    <button type="button" class="btn btn--secondary btn--sm" (click)="applyAuthorFilter()">
-      Search
-    </button>
-    @if (appliedAuthorFilter()) {
-      <button type="button" class="btn btn--secondary btn--sm" (click)="clearAuthorFilter()">
-        Clear
-      </button>
-    }
-  </div>
-
-  @if (appliedAuthorFilter()) {
-    <p class="list-status">Filtering by author: "{{ appliedAuthorFilter() }}"</p>
-  }
-
-  <div class="toolbar">
-    <div class="pagination">
-      <button
-        type="button"
-        class="btn btn--secondary btn--sm"
-        (click)="previousPage()"
-        [disabled]="page() <= 1"
-      >
-        ‹ Previous
-      </button>
-      <span class="pagination__current">Page {{ page() }}</span>
-      <button
-        type="button"
-        class="btn btn--secondary btn--sm"
-        (click)="nextPage()"
-        [disabled]="state.quotes().length < pageSize()"
-      >
-        Next ›
-      </button>
-    </div>
-
-    <label class="field field--inline page-size">
-      <span class="field__label">Page size</span>
-      <select class="select" [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
-        <option [value]="5">5</option>
-        <option [value]="10">10</option>
-        <option [value]="20">20</option>
-      </select>
-    </label>
-  </div>
-
-  @switch (state.status()) {
-    @case ('loading') {
-      <div class="list-skeleton" role="status" aria-label="Loading quotes">
-        @for (i of [0, 1, 2]; track i) {
-          <div class="list-skeleton__card">
-            <div class="skeleton-line skeleton-line--lg"></div>
-            <div class="skeleton-line skeleton-line--md"></div>
-            <div class="skeleton-line skeleton-line--sm"></div>
-          </div>
-        }
-      </div>
-    }
-    @case ('error') {
-      <div class="alert alert--error state--error" role="alert">
-        <p>{{ state.errorMessage() }}</p>
-        <button type="button" class="btn btn--secondary btn--sm" (click)="retry()">Retry</button>
-      </div>
-    }
-    @case ('loaded') {
-      @if (state.isEmpty()) {
-        <div class="state state--empty">
-          <p>No quotes on this page yet.</p>
-          <p class="list-status">Try a different page, or create the first one above.</p>
+  <div class="panel__body quotes-list__body">
+    @switch (state.status()) {
+      @case ('loading') {
+        <div class="list-skeleton" role="status" aria-label="Loading quotes">
+          @for (i of [0, 1, 2]; track i) {
+            <div class="list-skeleton__card">
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line skeleton-line--md"></div>
+              <div class="skeleton-line skeleton-line--sm"></div>
+            </div>
+          }
         </div>
-      } @else {
-        <ul class="quote-list">
-          @for (quote of state.quotes(); track quote.id) {
-            <li class="quote-card">
-              <blockquote class="quote-card__text">{{ quote.text }}</blockquote>
-              <p class="quote-card__author">— {{ quote.author || 'Unknown' }}</p>
+      }
+      @case ('error') {
+        <div class="alert alert--error state--error" role="alert">
+          <p>{{ state.errorMessage() }}</p>
+          <button type="button" class="btn btn--secondary btn--sm" (click)="retry()">Retry</button>
+        </div>
+      }
+      @case ('loaded') {
+        @if (state.isEmpty()) {
+          <div class="state state--empty">
+            <app-icon name="quote" [size]="28" class="state__icon" />
+            <p>No quotes on this page yet.</p>
+            <p class="list-status t-meta">Try a different page, or create the first one above.</p>
+          </div>
+        } @else {
+          <ul class="quote-list">
+            @for (quote of state.quotes(); track quote.id) {
+              <li class="quote-card">
+                <!-- The card is one link: the anchor's ::after stretches over the
+                     whole <li>, so clicking anywhere selects the quote while the
+                     accessible name stays on a real link. routerLinkActive marks
+                     the open quote, which the card reads via :has(). -->
+                <a
+                  class="quote-card__link"
+                  routerLinkActive="quote-card__link--active"
+                  [routerLink]="['/quotes', quote.id]"
+                >
+                  <span class="quote-card__author">— {{ quote.author || 'Unknown' }}</span>
+                  <span class="quote-card__text">{{ quote.text }}</span>
+                  <span class="sr-only">View details</span>
+                </a>
 
-              <div class="quote-card__footer">
-                <p class="quote-card__meta">
-                  Quote #{{ quote.id }} · owned by user #{{ quote.userId }}
+                <div class="quote-card__footer">
+                  <p class="quote-card__meta">
+                    Quote #{{ quote.id }} · owned by user #{{ quote.userId }}
+                    @if (ownsQuote(quote)) {
+                      <span class="badge">Yours</span>
+                    }
+                  </p>
+
                   @if (ownsQuote(quote)) {
-                    <span class="badge">Yours</span>
-                  }
-                </p>
-
-                <div class="quote-card__actions">
-                  <a class="btn btn--primary btn--sm" [routerLink]="['/quotes', quote.id]">
-                    View details
-                  </a>
-
-                  @if (ownsQuote(quote)) {
-                    <button
-                      type="button"
-                      class="btn btn--danger btn--sm"
-                      (click)="deleteQuote(quote)"
-                      [disabled]="deletingId() === quote.id"
-                    >
-                      @switch (deletingId() === quote.id) {
-                        @case (true) {
-                          Deleting…
+                    <div class="quote-card__actions">
+                      <button
+                        type="button"
+                        class="btn btn--danger btn--sm quote-card__delete"
+                        (click)="deleteQuote(quote)"
+                        [disabled]="deletingId() === quote.id"
+                      >
+                        @switch (deletingId() === quote.id) {
+                          @case (true) {
+                            Deleting…
+                          }
+                          @default {
+                            Delete
+                          }
                         }
-                        @default {
-                          Delete
-                        }
-                      }
-                    </button>
+                      </button>
+                    </div>
                   }
                 </div>
-              </div>
-            </li>
-          }
-        </ul>
+              </li>
+            }
+          </ul>
+        }
       }
     }
+  </div>
+
+  <!-- Paging applies to the library listing only: a collection is a fixed set of
+       quote ids, not a paginated feed. -->
+  @if (!inCollectionMode()) {
+    <div class="toolbar quotes-list__toolbar">
+      <div class="pagination">
+        <button
+          type="button"
+          class="btn btn--secondary btn--sm"
+          (click)="previousPage()"
+          [disabled]="page() <= 1"
+        >
+          ‹ Previous
+        </button>
+        <span class="pagination__current">Page {{ page() }}</span>
+        <button
+          type="button"
+          class="btn btn--secondary btn--sm"
+          (click)="nextPage()"
+          [disabled]="state.quotes().length < pageSize()"
+        >
+          Next ›
+        </button>
+      </div>
+
+      <label class="field field--inline page-size">
+        <span class="field__label">Page size</span>
+        <select class="select" [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
+          <option [value]="5">5</option>
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+        </select>
+      </label>
+    </div>
   }
-</section>
+</div>
+
+@if (auth.isAuthenticated()) {
+  <!-- Native <dialog>: showModal() gives the focus trap, the inert background
+       and Escape-to-close without a hand-rolled overlay. Opened from the
+       navigation rail's "New Quote" button via ShellState. -->
+  <dialog #newQuoteDialog class="dialog" aria-labelledby="new-quote-title" (close)="closeNewQuoteDialog()">
+    <div class="dialog__header">
+      <h2 id="new-quote-title" class="dialog__title">New quote</h2>
+      <button type="button" class="icon-btn" (click)="closeNewQuoteDialog()">
+        <app-icon name="close" [size]="18" label="Close" />
+      </button>
+    </div>
+    <app-quote-form (created)="onQuoteCreated($event)" />
+  </dialog>
+}

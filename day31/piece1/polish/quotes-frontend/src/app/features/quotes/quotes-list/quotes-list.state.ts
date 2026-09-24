@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { catchError, forkJoin, of } from 'rxjs';
 import { Quotes } from '../../../core/services/quotes';
 import { Quote } from '../../../core/models/quote.models';
 import { AppError } from '../../../core/models/app-error.models';
@@ -55,6 +56,47 @@ export class QuotesListState {
       error: (err: AppError) => {
         if (requestId !== this.latestRequestId) {
           return; // stale response
+        }
+        this._errorMessage.set(err.message);
+        this._status.set('error');
+      },
+    });
+  }
+
+  // Collection mode. A Collection carries only { quoteId, addedAt } pairs — the
+  // quote bodies are never embedded — so showing a collection means resolving
+  // each id through GET /api/v1/quotes/{id}, which is the HybridCache-backed
+  // hot read rather than a database hit per quote. Ids are de-duplicated first,
+  // and an id that no longer resolves (deleted quote) is dropped from the
+  // result instead of failing the whole view.
+  loadByIds(quoteIds: readonly number[]): void {
+    const requestId = ++this.latestRequestId;
+    this._status.set('loading');
+    this._errorMessage.set(null);
+
+    const uniqueIds = [...new Set(quoteIds)];
+
+    if (uniqueIds.length === 0) {
+      this._quotes.set([]);
+      this._status.set('loaded');
+      return;
+    }
+
+    forkJoin(
+      uniqueIds.map((id) =>
+        this.quotesService.getQuoteById(id).pipe(catchError(() => of(null))),
+      ),
+    ).subscribe({
+      next: (results) => {
+        if (requestId !== this.latestRequestId) {
+          return; // stale response: a newer load started before this one arrived
+        }
+        this._quotes.set(results.filter((quote): quote is Quote => quote !== null));
+        this._status.set('loaded');
+      },
+      error: (err: AppError) => {
+        if (requestId !== this.latestRequestId) {
+          return;
         }
         this._errorMessage.set(err.message);
         this._status.set('error');

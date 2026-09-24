@@ -1,16 +1,54 @@
-.quotes-page {
+/* Columns 2 and 3 of the workspace. The rail is column 1 and lives in the
+   shell's own grid, so the widths here start at the list. */
+.quotes-layout {
+  /* Must be an explicit height, not flex: the host (app-quotes-page) is a block
+     box, so a `flex: 1` here was inert and the grid fell back to content
+     height — which is what left columns 2 and 3 ending partway down the
+     viewport. The host is given height: 100% globally (see "routed fill" in
+     src/styles.css), so 100% here resolves against a definite height. */
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--list-width) 1fr;
+  overflow: hidden;
+}
+
+.quotes-layout__list,
+.quotes-layout__detail {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
 }
 
-.page-header__title {
-  font-size: 1.75rem;
+.quotes-layout__detail {
+  background: var(--color-bg);
+  overflow-y: auto;
 }
 
-.page-header__subtitle {
-  margin-top: var(--space-1);
-  color: var(--color-text-secondary);
-  font-size: 0.95rem;
-  max-width: 60ch;
+/* The rule that makes the routed detail component (QuotesEmpty / QuoteDetail)
+   fill this column is global for the same encapsulation reason as above —
+   see "routed fill" in src/styles.css. */
+
+/* Tablet: two columns still, just narrower — the navigation rail has already
+   become a drawer by this point, which is where the space comes from. */
+@media (max-width: 1199px) {
+  .quotes-layout {
+    grid-template-columns: minmax(16rem, 22rem) 1fr;
+  }
+}
+
+/* Mobile: one column at a time. The list is the default view; opening a quote
+   swaps in the detail, and the detail's own back link returns to the list. */
+@media (max-width: 767px) {
+  .quotes-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .quotes-layout--detail .quotes-layout__list,
+  .quotes-layout:not(.quotes-layout--detail) .quotes-layout__detail {
+    display: none;
+  }
 }

@@ -1,0 +1,167 @@
+.notifications {
+  position: relative;
+}
+
+.notifications__trigger {
+  position: relative;
+}
+
+.notifications__badge {
+  flex: none;
+  min-width: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--color-primary-solid);
+  color: var(--color-primary-fg);
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.35rem;
+  text-align: center;
+}
+
+/* Full-viewport dismiss target behind the popover. */
+.notifications__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.notifications__popover {
+  position: absolute;
+  z-index: 31;
+  bottom: calc(100% + var(--space-2));
+  left: 0;
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: 24rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.notifications__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notifications__title {
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.notifications__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3);
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.notification {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.notification:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Unread carries three independent signals — a filled dot, a stronger
+   surface/border, and the "Unread" badge — so it never depends on colour alone. */
+.notification--unread {
+  background: var(--color-surface-active);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.notification__dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.4rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.notification--unread .notification__dot {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.notification__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.notification__message {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.notification--unread .notification__message {
+  color: var(--color-text);
+}
+
+.notification__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.notification__type {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* On mobile the rail is a drawer pinned to the left edge, so a popover anchored
+   above the trigger would overflow; drop it to a full-width sheet instead. */
+@media (max-width: 767px) {
+  .notifications__popover {
+    left: 0;
+    right: 0;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification {
+    transition: none;
+  }
+}

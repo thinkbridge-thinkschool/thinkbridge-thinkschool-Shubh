@@ -23,6 +23,7 @@
     <!-- Only the modules whose pure domain/application logic is under test here. -->
     <ProjectReference Include="..\QuotesApi\Modules\Quotes\QuotesApi.Modules.Quotes.csproj" />
     <ProjectReference Include="..\QuotesApi\Modules\Identity\QuotesApi.Modules.Identity.csproj" />
+    <ProjectReference Include="..\QuotesApi\Modules\Notifications\QuotesApi.Modules.Notifications.csproj" />
   </ItemGroup>
 
 </Project>

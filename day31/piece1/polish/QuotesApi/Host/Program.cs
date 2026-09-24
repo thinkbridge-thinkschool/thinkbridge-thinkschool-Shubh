@@ -10,6 +10,7 @@ using QuotesApi.Host.OpenApi;
 using QuotesApi.Modules.Identity;
 using QuotesApi.Modules.Identity.Api;
 using QuotesApi.Modules.Notifications;
+using QuotesApi.Modules.Notifications.Api;
 using QuotesApi.Modules.Quotes;
 using QuotesApi.Modules.Quotes.Api;
 using QuotesApi.Shared;
@@ -158,6 +159,7 @@ app.MapControllers();
 
 app.MapQuoteEndpoints();
 app.MapIdentityEndpoints();
+app.MapNotificationEndpoints();
 
 // /openapi/v1.json — not gated behind an environment check: it carries no secret (the JWT
 // signing key lives only in configuration/user-secrets, never in route or DTO metadata) and

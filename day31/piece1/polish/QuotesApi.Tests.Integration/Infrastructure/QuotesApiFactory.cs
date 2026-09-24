@@ -83,6 +83,17 @@ public sealed class QuotesApiFactory : WebApplicationFactory<Program>
                 services.Remove(outboxWorker);
             }
 
+            // Same reason for the Service Bus consumer: it needs a real namespace. Its
+            // processing logic (QuoteCreatedNotificationHandler) stays registered and is
+            // exercised directly by NotificationTests.
+            var notificationsConsumer = services.FirstOrDefault(d =>
+                d.ServiceType == typeof(IHostedService) &&
+                d.ImplementationType == typeof(NotificationsConsumerWorker));
+            if (notificationsConsumer is not null)
+            {
+                services.Remove(notificationsConsumer);
+            }
+
             services.RemoveAll<IClock>();
             services.AddSingleton<IClock>(Clock);
 

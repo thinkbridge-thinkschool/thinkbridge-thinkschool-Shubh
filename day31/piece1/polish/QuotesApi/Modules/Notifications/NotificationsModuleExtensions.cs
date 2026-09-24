@@ -15,6 +15,8 @@ public static class NotificationsModuleExtensions
     {
         services.Configure<ServiceBusOptions>(configuration.GetSection("ServiceBus"));
         services.Configure<OutboxRelayOptions>(configuration.GetSection("Outbox"));
+        services.Configure<NotificationConsumerOptions>(
+            configuration.GetSection("ServiceBus:Notifications"));
 
         // Transactional outbox relay: publishes OutboxMessages rows to Service Bus and marks
         // them processed only after a confirmed send. Authentication is DefaultAzureCredential
@@ -46,6 +48,13 @@ public static class NotificationsModuleExtensions
 
         services.AddSingleton<OutboxCrashSimulator>();
         services.AddHostedService<OutboxRelayWorker>();
+
+        // Consuming side (Service Bus -> notifications), deliberately a separate worker from
+        // the relay above. Shares the same ServiceBusClient/credential; the handler is scoped
+        // because it uses QuotesDbContext, and the worker creates one scope per message.
+        services.AddSingleton<NotificationProcessingFailureSimulator>();
+        services.AddScoped<QuoteCreatedNotificationHandler>();
+        services.AddHostedService<NotificationsConsumerWorker>();
 
         // The Shared contract Quotes (and any future module) publishes events through.
         services.AddScoped<IIntegrationEventWriter, OutboxEventWriter>();

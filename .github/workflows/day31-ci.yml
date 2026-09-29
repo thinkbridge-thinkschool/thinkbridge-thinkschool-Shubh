@@ -113,7 +113,10 @@ jobs:
         working-directory: day31/piece1/polish/QuotesApi/Host
         env:
           ASPNETCORE_ENVIRONMENT: Development
-          ASPNETCORE_URLS: http://localhost:5310
+          # Must match quotes-frontend/src/environments/environment.ts (apiBaseUrl), which is
+          # what `ng serve` bakes into the app Playwright drives. It was 5310 here after that
+          # file moved to 5177, so every browser API call hit a closed port.
+          ASPNETCORE_URLS: http://localhost:5177
           # CI-only, non-production values — never real secrets, never Azure SQL/Azure
           # Redis/Azure Service Bus. Sql:LocalConnectionString is exactly the "local-only
           # development" escape hatch SqlOptions.cs documents.
@@ -137,7 +140,7 @@ jobs:
       - name: Wait for backend readiness
         run: |
           for i in $(seq 1 30); do
-            if curl -sf "http://localhost:5310/api/v1/quotes?page=1&size=1" > /dev/null; then
+            if curl -sf "http://localhost:5177/api/v1/quotes?page=1&size=1" > /dev/null; then
               echo "Backend is ready."
               exit 0
             fi

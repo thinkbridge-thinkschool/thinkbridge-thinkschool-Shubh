@@ -2,11 +2,12 @@
 // backend was actually deployed and its live URL verified with curl — never a
 // guessed or reused URL from a different day's deployment.
 //
-// Day 29 Stage 3A: points at the Day 29 Dev container app (quotes-api-day29-dev),
-// which is a dedicated Azure SQL database (quotesapi-day29) + Managed Identity
-// auth, not SQLite and not the old Day 13-era backend this used to point at. This
-// is still the Dev environment — repoint this again once Day 29 Prod exists.
+// Day 32: points at the Day 32 PROD Container App (quotes-api-day32-prod, new
+// subscription), verified live (GET /openapi/v1.json -> 200) before being set here.
+// The DEV build uses environment.azure-dev.ts (`ng build --configuration azure-dev`).
+// Previously this pointed at the Day 29 Dev container app (quotes-api-day29-dev) on the
+// old, now-disabled subscription.
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://quotes-api-day29-dev.bluemoss-72267de6.eastasia.azurecontainerapps.io',
+  apiBaseUrl: 'https://quotes-api-day32-prod.bravesmoke-5f56c4fd.eastasia.azurecontainerapps.io',
 };

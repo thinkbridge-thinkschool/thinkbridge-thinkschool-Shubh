@@ -168,7 +168,7 @@
 
 /* Lifted above the stretched link so the delete button stays clickable. */
 .quote-card__actions {
-  position: relative;
+  position: absolute;
   z-index: 1;
   display: flex;
   gap: var(--space-2);

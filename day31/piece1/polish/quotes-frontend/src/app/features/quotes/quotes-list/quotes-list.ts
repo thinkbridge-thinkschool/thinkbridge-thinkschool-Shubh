@@ -83,18 +83,18 @@ export class QuotesList {
     // state service. This is a side effect (an HTTP call), not a derived value,
     // which is why it belongs in effect() rather than computed().
     effect(() => {
-      // Collection mode deliberately doesn't read page/pageSize: a collection
-      // is a fixed set of quote ids, not a paginated feed, so paging controls
-      // don't apply and must not retrigger this.
       if (this.shell.selectedCollectionId() !== null) {
         this.state.loadByIds(this.shell.selectedCollectionQuoteIds());
         return;
       }
-
       const page = this.page();
       const pageSize = this.pageSize();
-      const author = this.appliedAuthorFilter();
-      this.state.load(page, pageSize, author || undefined);
+      const searchTerm = this.appliedAuthorFilter();
+      if (searchTerm.trim()) {
+        this.state.search(page, pageSize, searchTerm);
+        return;
+      }
+      this.state.load(page, pageSize);
     });
 
     // Opens the dialog when the rail's "New Quote" button is pressed. The

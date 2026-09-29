@@ -38,6 +38,17 @@ test('register, login, create a quote, and see it appear in the list', async ({ 
   await page.getByRole('button', { name: 'New Quote' }).click();
   await page.locator('#author').fill(author);
   await page.locator('#text').fill(text);
+
+  // onQuoteCreated() reloads page 1 from the real backend; listen for that
+  // re-fetch before submitting so its response can't be missed.
+  const listResponse = (pageNumber: number) =>
+    page.waitForResponse(
+      (res) =>
+        res.request().method() === 'GET' &&
+        /\/api\/v1\/quotes\?/.test(res.url()) &&
+        new URL(res.url()).searchParams.get('page') === String(pageNumber),
+    );
+  let pageLoaded = listResponse(1);
   await page.getByRole('button', { name: 'Create quote' }).click();
 
   // The success banner confirms the POST succeeded. It is rendered by the list
@@ -45,10 +56,28 @@ test('register, login, create a quote, and see it appear in the list', async ({ 
   // successful create closes the dialog.
   await expect(page.getByRole('status').filter({ hasText: `Quote by ${author} was created.` })).toBeVisible();
 
-  // 4. Verify the created quote is visibly rendered in the list (onQuoteCreated()
-  // reloads the current page from the real backend, so this proves the quote was
-  // actually persisted and re-fetched, not just optimistically shown).
+  // 4. Verify the created quote is visibly rendered in the list, re-fetched from the
+  // real backend (so it was actually persisted, not just optimistically shown).
+  //
+  // GET /api/v1/quotes has no ORDER BY, so once a database holds more than one
+  // page of quotes the new one is not guaranteed to be on page 1 (a long-lived
+  // deployed environment, unlike the empty CI database). Walk the list with the
+  // real "Next" control until the card appears: each step waits for that page's
+  // actual API response and for the loading skeleton to clear, and "Next" is
+  // disabled on the last page, so the walk always ends.
   const quoteCard = page.locator('.quote-card', { hasText: text });
+  const nextButton = page.getByRole('button', { name: 'Next ›' });
+  for (let pageNumber = 1; ; pageNumber++) {
+    expect((await pageLoaded).ok(), `GET quotes page ${pageNumber} should succeed`).toBe(true);
+    await expect(page.locator('.pagination__current')).toHaveText(`Page ${pageNumber}`);
+    await expect(page.getByRole('status', { name: 'Loading quotes' })).toHaveCount(0);
+    if ((await quoteCard.count()) > 0 || (await nextButton.isDisabled())) {
+      break;
+    }
+    pageLoaded = listResponse(pageNumber + 1);
+    await nextButton.click();
+  }
+
   await expect(quoteCard).toBeVisible();
   await expect(quoteCard.locator('.quote-card__author')).toHaveText(`— ${author}`);
   await expect(quoteCard.getByText('Yours')).toBeVisible();

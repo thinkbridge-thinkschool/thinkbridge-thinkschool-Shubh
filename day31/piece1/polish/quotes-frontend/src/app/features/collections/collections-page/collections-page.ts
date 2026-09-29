@@ -29,7 +29,7 @@ export class CollectionsPage {
 
   constructor() {
     this.load();
-  }
+  } 
 
   private load(): void {
     this.status.set('loading');

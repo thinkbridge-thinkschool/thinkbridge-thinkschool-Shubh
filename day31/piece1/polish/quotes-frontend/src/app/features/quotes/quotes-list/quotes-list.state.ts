@@ -23,6 +23,8 @@ export class QuotesListState {
   readonly quotes = this._quotes.asReadonly();
   readonly status = this._status.asReadonly();
   readonly errorMessage = this._errorMessage.asReadonly();
+  private readonly _searchEmptyMessage = signal<string | null>(null);
+  readonly searchEmptyMessage = this._searchEmptyMessage.asReadonly();
 
   // Derived, not stored: "empty" is just "loaded with zero rows" and must
   // never disagree with the quotes/status signals it's computed from.
@@ -62,6 +64,53 @@ export class QuotesListState {
       },
     });
   }
+
+  //search quotes by author or text
+  search(page: number, size: number, searchTerm: string): void {
+  const requestId = ++this.latestRequestId;
+
+  this._status.set('loading');
+  this._errorMessage.set(null);
+
+  const term = searchTerm.trim().toLowerCase();
+
+  if (!term) {
+    this._quotes.set([]);
+    this._status.set('loaded');
+    return;
+  }
+
+  this.quotesService.getAllQuotesForSearch().subscribe({
+    next: (quotes) => {
+      if (requestId !== this.latestRequestId) {
+        return;
+      }
+      const filteredQuotes = quotes.filter(
+        (quote) =>
+          quote.author.toLowerCase().includes(term),
+      );
+      const start = (page - 1) * size;
+      this._quotes.set(
+        filteredQuotes.slice(start, start + size),
+      );
+      if (filteredQuotes.length === 0) {
+        this._searchEmptyMessage.set(
+          'No quotes found by this author. Try a different search term.',
+        );
+}
+      this._status.set('loaded');
+    },
+
+    error: (err: AppError) => {
+      if (requestId !== this.latestRequestId) {
+        return;
+      }
+
+      this._errorMessage.set(err.message);
+      this._status.set('error');
+    },
+  });
+}
 
   // Collection mode. A Collection carries only { quoteId, addedAt } pairs — the
   // quote bodies are never embedded — so showing a collection means resolving

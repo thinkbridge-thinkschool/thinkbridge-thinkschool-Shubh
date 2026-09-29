@@ -21,6 +21,18 @@ export class Quotes {
     }
     return this.http.get<Quote[]>(`${API_BASE_URL}/api/v1/quotes`, { params });
   }
+    //for search
+    getAllQuotesForSearch(): Observable<Quote[]> {
+    return this.http.get<Quote[]>(
+      `${API_BASE_URL}/api/v1/quotes`,
+      {
+        params: {
+          page: 1,
+          size: 100,
+        },
+      },
+    );
+  }
 
   // GET /api/v1/quotes/{id} (Day 29 QuoteEndpoints) — anonymous.
   getQuoteById(id: number): Observable<Quote> {

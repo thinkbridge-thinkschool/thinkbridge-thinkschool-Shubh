@@ -1,0 +1,73 @@
+name: Day 31 - Deploy quotes-frontend to Azure Static Web Apps (prod)
+
+# Deploys the Day 31 Angular frontend to the EXISTING Static Web App
+# stapp-quotes-day32-prod (resource group rg-day32-prod). No infrastructure is
+# created or changed here — this only uploads the compiled static files.
+#
+# The production build bakes in environment.production.ts, which points at the
+# Day 32 PROD Container App (quotes-api-day32-prod), so prod frontend -> prod API.
+#
+# Same shape as day17-piece1-swa-deploy.yml (build in the workflow, then upload
+# the compiled output with skip_app_build: true), but with its own secret: the
+# Day 17 token belongs to a Static Web App on the old, disabled subscription.
+
+on:
+  push:
+    branches:
+      - main
+      - frontend
+    paths:
+      - 'day31/piece1/polish/quotes-frontend/**'
+      - '!day31/piece1/polish/quotes-frontend/e2e/**'
+      - '!day31/piece1/polish/quotes-frontend/playwright.config.ts'
+      - '.github/workflows/day31-frontend-swa-deploy.yml'
+  workflow_dispatch:
+
+# Never run two prod deploys at once; a newer push waits for the running one.
+concurrency:
+  group: day31-frontend-swa-prod
+  cancel-in-progress: false
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and deploy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: day31/piece1/polish/quotes-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: day31/piece1/polish/quotes-frontend
+        run: npm ci
+
+      # "npm run build" = "ng build", whose defaultConfiguration is "production"
+      # (environment.production.ts). Passed explicitly so the prod API URL can
+      # never silently change if the default is edited later.
+      - name: Build (production)
+        working-directory: day31/piece1/polish/quotes-frontend
+        run: npm run build -- --configuration production
+
+      # staticwebapp.config.json (SPA navigation fallback) lives at the project
+      # root, not in public/, so the Angular build never copies it.
+      - name: Copy staticwebapp.config.json into build output
+        run: cp day31/piece1/polish/quotes-frontend/staticwebapp.config.json day31/piece1/polish/quotes-frontend/dist/quotes-frontend/browser/staticwebapp.config.json
+
+      # With skip_app_build: true the action uploads app_location as-is, so it
+      # must be the compiled output folder that contains index.html.
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DAY32_PROD }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: 'day31/piece1/polish/quotes-frontend/dist/quotes-frontend/browser'
+          output_location: ''
+          skip_app_build: true

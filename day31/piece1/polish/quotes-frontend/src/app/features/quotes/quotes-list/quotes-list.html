@@ -54,10 +54,20 @@
         @if (state.isEmpty()) {
           <div class="state state--empty">
             <app-icon name="quote" [size]="28" class="state__icon" />
-            <p>No quotes on this page yet.</p>
-            <p class="list-status t-meta">Try a different page, or create the first one above.</p>
+
+            @if (state.searchEmptyMessage(); as message) {
+              <p>{{ message }}</p>
+              <p class="list-status t-meta">
+                Try a different author or search text.
+              </p>
+            } @else {
+              <p>No quotes on this page yet.</p>
+              <p class="list-status t-meta">
+                Try a different page, or create the first one above.
+              </p>
+            }
           </div>
-        } @else {
+          } @else {
           <ul class="quote-list">
             @for (quote of state.quotes(); track quote.id) {
               <li class="quote-card">

@@ -38,6 +38,7 @@ function blankAfterTrim(value: string, message: string) {
   return value.length > 0 && value.trim().length === 0 ? { kind: 'blank', message } : undefined;
 }
 
+
 @Component({
   selector: 'app-quote-form',
   imports: [FormField],

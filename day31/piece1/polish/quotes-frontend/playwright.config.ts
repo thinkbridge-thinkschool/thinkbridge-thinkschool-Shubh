@@ -2,9 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 // Day 31 E2E: the frontend (this project, served by `ng serve` on 4210) and the Day 31
 // backend (day31/piece1/polish/QuotesApi, run separately against ephemeral SQL Server/Redis
-// containers on 5310/16381) are both already-running services this config only points at; it
-// does not start them, so the same suite can run against a backend/frontend pair started
-// however the caller (a local script, or CI) chooses to start them.
+// containers) are both already-running services this config only points at; it does not start
+// them, so the same suite can run against a backend/frontend pair started however the caller
+// (a local script, or CI) chooses to start them. The backend must listen on the port in
+// src/environments/environment.ts (apiBaseUrl, currently http://localhost:5177): the browser
+// calls that URL directly, so a backend on any other port leaves every API call refused.
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,

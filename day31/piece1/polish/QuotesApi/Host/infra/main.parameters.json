@@ -19,6 +19,15 @@
       },
       "jwtKey": {
         "value": "${JWT_KEY}"
+      },
+      "deploymentStage": {
+        "value": "${DEPLOYMENT_STAGE}"
+      },
+      "sqlAdminLogin": {
+        "value": "${AZURE_SQL_ADMIN_LOGIN}"
+      },
+      "redisSidecarImage": {
+        "value": "${REDIS_SIDECAR_IMAGE=}"
       }
     }
 }

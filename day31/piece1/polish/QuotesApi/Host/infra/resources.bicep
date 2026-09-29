@@ -1,3 +1,7 @@
+// Per-environment orchestration (rg-<env>): computes names and stage-specific settings, calls
+// one module per concern, and wires their outputs together. Resource definitions live in
+// ./modules; see each module's header for what it owns.
+
 @description('The location used for all deployed resources')
 param location string = resourceGroup().location
 
@@ -13,178 +17,150 @@ param principalId string
 @description('Principal type of user or app')
 param principalType string
 
-@description('The signing key for the SelfJwt authentication scheme (Program.cs Jwt:Key). Supplied via azd env, never committed to source.')
+@description('The signing key for the SelfJwt authentication scheme (Program.cs Jwt:Key). Supplied via azd env, never committed to source; stored only in Key Vault.')
 @secure()
 param jwtKey string
 
-@description('Name of the azd environment (e.g. day27-dev, day27-prod). Used to build a unique, environment-specific Container App name so Dev and Prod never collide with each other or with earlier days\' deployments that share the same Container Apps Environment.')
+@description('Name of the azd environment (e.g. day32-dev, day32-prod). Used to build unique, environment-specific resource names so Dev and Prod never collide inside the shared Container Apps Environment.')
 param environmentName string
+
+@description('Deployment stage: dev or prod')
+@allowed([
+  'dev'
+  'prod'
+])
+param deploymentStage string
+
+@description('Display name/UPN of the SQL server\'s Entra admin (object id = principalId)')
+param sqlAdminLogin string
+
+@description('Redis sidecar image in the shared registry; empty omits the sidecar (first provision only)')
+param redisSidecarImage string = ''
+
+@description('Resource group holding the shared Dev/Prod resources (modules/shared.bicep)')
+param sharedResourceGroupName string
+
+param logAnalyticsWorkspaceId string
+param containerRegistryName string
+param containerRegistryLoginServer string
+param containerAppsEnvironmentId string
+param serviceBusNamespaceName string
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = uniqueString(subscription().id, resourceGroup().id, location)
+var isProd = deploymentStage == 'prod'
 
-// Day 27 Container App name is derived from the azd environment name (day27-dev /
-// day27-prod) instead of a fixed literal, so Dev and Prod each get their own name
-// and neither collides with 'quotes-api' or 'quotes-api-day13-piece1', which already
-// exist in the shared Container Apps Environment referenced below.
+// Container App names must be unique within the (shared) Container Apps Environment, so the
+// name is derived from the azd environment name: quotes-api-day32-dev / quotes-api-day32-prod.
 var containerAppName = toLower('quotes-api-${environmentName}')
 
-// Reuse the existing shared Application Insights instance instead of provisioning a
-// new Application Insights + Log Analytics workspace per azd environment. This is a
-// student subscription with limited credits, and there is no data-isolation
-// requirement between Day 27 Dev and Prod for this assignment, so sharing one App
-// Insights resource for both is the safe, minimal-cost choice. The existing
-// Container Apps Environment already has its own Log Analytics workspace wired up
-// from when it was first created, so no new workspace is needed for platform logs.
-resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: 'appi-yayuogblvizdw'
-  scope: resourceGroup('rg-quotes-api')
-}
+var serviceBusTopicName = 'quote-events-${deploymentStage}'
+var serviceBusSubscriptionName = 'notifications'
 
-// Reuse the existing shared Container Registry instead of creating a new Basic ACR
-// for every azd environment.
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: 'cryayuogblvizdw'
-  scope: resourceGroup('rg-quotes-api')
-}
+// Day 32 approved scale limits: both scale to zero when idle. Prod's minimum is raised to 1
+// only temporarily (outside Bicep) during the recorded demo.
+var scaleMinReplicas = 0
+var scaleMaxReplicas = isProd ? 3 : 2
 
-// Container apps environment
-// This subscription (Azure for Students) allows exactly one Container Apps
-// Environment total, and it's already in use (rg-quotes-api / cae-yayuogblvizdw,
-// from an earlier day's deployment). Rather than fail provisioning or delete
-// that environment, this app is deployed into the existing shared environment
-// as its own separate Container App (unique within this resource group).
-resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
-  name: 'cae-yayuogblvizdw'
-  scope: resourceGroup('rg-quotes-api')
-}
-
-// Day 29: no Azure Cache for Redis exists in this subscription, and creating a dedicated
-// managed instance would be a real recurring cost for a Dev exercise. Reuses a small,
-// internal-only Redis container app already created in the shared environment above
-// (redis:7-alpine, TCP ingress, no public exposure) instead of provisioning new Redis
-// infrastructure — read here only to resolve its internal FQDN for Redis__ConnectionString.
-resource redisCacheShared 'Microsoft.App/containerApps@2023-05-01' existing = {
-  name: 'redis-cache-shared'
-  scope: resourceGroup('rg-quotes-api')
-}
-
-module quotesApiIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.2.1' = {
-  name: 'quotesApiidentity'
+module identity 'modules/managed-identity.bicep' = {
+  name: 'managedIdentity'
   params: {
-    name: '${abbrs.managedIdentityUserAssignedIdentities}quotesApi-${resourceToken}'
+    name: '${abbrs.managedIdentityUserAssignedIdentities}quotesapi-${environmentName}'
     location: location
   }
 }
 
-// Grant the new identity AcrPull on the existing shared ACR — Managed Identity pull,
-// no admin credentials, no new registry. The ACR lives in a different resource group
-// (rg-quotes-api) than this deployment, so the role assignment must be deployed via
-// a module scoped to that resource group rather than as a plain resource here.
-module acrPullRoleAssignment './modules/acr-pull-role-assignment.bicep' = {
-  name: 'acrPullRoleAssignment'
-  scope: resourceGroup('rg-quotes-api')
+module appInsights 'modules/app-insights.bicep' = {
+  name: 'appInsights'
   params: {
-    acrName: containerRegistry.name
-    principalId: quotesApiIdentity.outputs.principalId
+    name: '${abbrs.insightsComponents}${environmentName}'
+    location: location
+    tags: tags
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
   }
 }
 
-module quotesApiFetchLatestImage './modules/fetch-container-image.bicep' = {
-  name: 'quotesApi-fetch-image'
+module sql 'modules/sql.bicep' = {
+  name: 'sql'
   params: {
+    serverName: '${abbrs.sqlServers}${environmentName}-${resourceToken}'
+    location: location
+    tags: tags
+    deploymentStage: deploymentStage
+    adminLogin: sqlAdminLogin
+    adminPrincipalId: principalId
+    adminPrincipalType: principalType
+  }
+}
+
+module staticWebApp 'modules/static-web-app.bicep' = {
+  name: 'staticWebApp'
+  params: {
+    name: '${abbrs.webStaticSites}quotes-${environmentName}'
+    location: location
+    tags: tags
+  }
+}
+
+module keyVault 'modules/key-vault.bicep' = {
+  name: 'keyVault'
+  params: {
+    // 3-24 characters: kv-day32dev<8> / kv-day32prod<8>.
+    name: '${abbrs.keyVaultVaults}${replace(environmentName, '-', '')}${take(resourceToken, 8)}'
+    location: location
+    tags: tags
+    jwtKey: jwtKey
+    jwtReaderPrincipalId: identity.outputs.principalId
+  }
+}
+
+module serviceBusTopic 'modules/servicebus-topic.bicep' = {
+  name: 'serviceBusTopic-${environmentName}'
+  scope: resourceGroup(sharedResourceGroupName)
+  params: {
+    namespaceName: serviceBusNamespaceName
+    topicName: serviceBusTopicName
+    subscriptionName: serviceBusSubscriptionName
+    principalId: identity.outputs.principalId
+  }
+}
+
+module quotesApi 'modules/container-app.bicep' = {
+  name: 'containerApp'
+  params: {
+    name: containerAppName
+    location: location
+    tags: tags
     exists: quotesApiExists
-    name: containerAppName
+    containerAppsEnvironmentId: containerAppsEnvironmentId
+    sharedResourceGroupName: sharedResourceGroupName
+    containerRegistryName: containerRegistryName
+    containerRegistryLoginServer: containerRegistryLoginServer
+    identityResourceId: identity.outputs.resourceId
+    identityPrincipalId: identity.outputs.principalId
+    identityClientId: identity.outputs.clientId
+    appInsightsName: appInsights.outputs.name
+    sqlServerFqdn: sql.outputs.serverFqdn
+    sqlDatabaseName: sql.outputs.databaseName
+    serviceBusNamespaceName: serviceBusNamespaceName
+    serviceBusTopicName: serviceBusTopicName
+    serviceBusSubscriptionName: serviceBusSubscriptionName
+    corsAllowedOrigin: 'https://${staticWebApp.outputs.defaultHostname}'
+    jwtSecretUri: keyVault.outputs.jwtSecretUri
+    redisSidecarImage: redisSidecarImage
+    scaleMinReplicas: scaleMinReplicas
+    scaleMaxReplicas: scaleMaxReplicas
   }
 }
 
-module quotesApi 'br/public:avm/res/app/container-app:0.8.0' = {
-  name: 'quotesApi'
-  params: {
-    // Container App names must be unique within a Container Apps Environment (not
-    // just within a resource group). This environment is shared with earlier days'
-    // deployments, which already own 'quotes-api' and 'quotes-api-day13-piece1', so
-    // this app uses its own environment-specific name (see containerAppName above).
-    name: containerAppName
-    ingressTargetPort: 8080
-    // Day 29 Dev: scale to zero when idle — this is a Dev/verification environment, not a
-    // production deployment, and Azure for Students credits are limited.
-    scaleMinReplicas: 0
-    scaleMaxReplicas: 10
-    secrets: {
-      secureList:  [
-        {
-          name: 'jwt-key'
-          value: jwtKey
-        }
-      ]
-    }
-    containers: [
-      {
-        image: quotesApiFetchLatestImage.outputs.?containers[?0].?image ?? 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-        name: 'main'
-        resources: {
-          cpu: json('0.5')
-          memory: '1.0Gi'
-        }
-        env: [
-          {
-            name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-            value: appInsights.properties.ConnectionString
-          }
-          {
-            name: 'AZURE_CLIENT_ID'
-            value: quotesApiIdentity.outputs.clientId
-          }
-          {
-            name: 'PORT'
-            value: '8080'
-          }
-          {
-            name: 'Jwt__Key'
-            secretRef: 'jwt-key'
-          }
-          {
-            // Dedicated Day 29 database on the existing Day 25 Entra-ID-only SQL server —
-            // never Day 25's own identitydb. Authentication is Managed Identity via
-            // SqlManagedIdentityConnectionInterceptor; no password anywhere.
-            name: 'Sql__Server'
-            value: 'sql-day25-shubh2026.database.windows.net'
-          }
-          {
-            name: 'Sql__Database'
-            value: 'quotesapi-day29'
-          }
-          {
-            // The shared internal Redis container app (see redisCacheShared above) — not a
-            // new dedicated Redis instance. Stage 3B investigated a Container Apps platform
-            // issue where this internal TCP-transport ingress's documented exposedPort
-            // (6379) accepts no connections (silent timeout) while the standard port 443
-            // completes a TCP handshake but then resets as soon as StackExchange.Redis sends
-            // its first command — neither is currently usable for real Redis traffic. 6379
-            // matches Azure's documented exposedPort/targetPort contract, so it stays here
-            // as the semantically correct value pending further investigation, rather than
-            // the empirically-also-broken 443. See Stage 3B's report for full diagnosis.
-            name: 'Redis__ConnectionString'
-            value: '${redisCacheShared.properties.configuration.ingress.fqdn}:6379'
-          }
-        ]
-      }
-    ]
-    managedIdentities:{
-      systemAssigned: false
-      userAssignedResourceIds: [quotesApiIdentity.outputs.resourceId]
-    }
-    registries:[
-      {
-        server: containerRegistry.properties.loginServer
-        identity: quotesApiIdentity.outputs.resourceId
-      }
-    ]
-    environmentResourceId: containerAppsEnvironment.id
-    location: location
-    tags: union(tags, { 'azd-service-name': 'quotes-api' })
-  }
-}
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.properties.loginServer
 output AZURE_RESOURCE_QUOTES_API_ID string = quotesApi.outputs.resourceId
+output QUOTES_API_NAME string = quotesApi.outputs.name
+output QUOTES_API_URL string = 'https://${quotesApi.outputs.fqdn}'
+output SQL_SERVER_NAME string = sql.outputs.serverName
+output SQL_SERVER_FQDN string = sql.outputs.serverFqdn
+output SQL_DATABASE_NAME string = sql.outputs.databaseName
+output MANAGED_IDENTITY_NAME string = identity.outputs.name
+output STATIC_WEB_APP_NAME string = staticWebApp.outputs.name
+output STATIC_WEB_APP_URL string = 'https://${staticWebApp.outputs.defaultHostname}'
+output SERVICE_BUS_TOPIC string = serviceBusTopicName
+output KEY_VAULT_NAME string = keyVault.outputs.name

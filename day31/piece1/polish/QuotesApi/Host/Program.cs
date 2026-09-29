@@ -69,16 +69,25 @@ builder.Host.UseSerilog((context, services, configuration) =>
 // Day 31: also allows localhost:4210 — the Day 31 E2E frontend copy
 // (day31/piece1/polish/quotes-frontend) is served on a non-default port so it
 // never collides with another day's dev server already running on 4200.
+//
+// Day 32: each deployed environment's Static Web App origin is added through configuration
+// (Cors:AllowedOrigins, set by infra/resources.bicep as Cors__AllowedOrigins__0), because its
+// hostname is only known once that environment is provisioned.
 const string angularDevCorsPolicy = "AngularDev";
+var configuredCorsOrigins =
+    builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(angularDevCorsPolicy, policy =>
         policy
             .WithOrigins(
+            [
                 "http://localhost:4200",
                 "https://localhost:4200",
                 "http://localhost:4210",
-                "https://white-mushroom-0f3920100.7.azurestaticapps.net")
+                "https://white-mushroom-0f3920100.7.azurestaticapps.net",
+                .. configuredCorsOrigins
+            ])
             .AllowAnyHeader()
             .AllowAnyMethod());
 });

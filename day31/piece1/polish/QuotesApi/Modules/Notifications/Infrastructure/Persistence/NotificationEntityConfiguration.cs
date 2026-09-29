@@ -24,6 +24,7 @@ public sealed class NotificationEntityConfiguration : IEntityTypeConfiguration<N
             .HasMaxLength(Notification.MaxMessageLength);
         entity.Property(x => x.IsRead)
             .IsRequired();
+        
         entity.Property(x => x.CreatedAtUtc)
             .IsRequired();
         entity.Property(x => x.SourceMessageId)

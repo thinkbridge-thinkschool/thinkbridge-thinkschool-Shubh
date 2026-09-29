@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -22,6 +23,9 @@ public sealed class QuotesApiFactory : WebApplicationFactory<Program>
     private readonly string _sqlConnectionString;
     private readonly string _redisConnectionString;
 
+    // One id per factory, used for both its database name and its Redis key prefix.
+    private readonly string _testRunId = Guid.NewGuid().ToString("N");
+
     // A real, mutable clock: it starts equal to the actual current time (so
     // DateTimeOffset.UtcNow-based logic elsewhere, e.g. login's refresh-token expiry, stays
     // consistent with it), but a test can advance it deliberately — e.g. to look at a refresh
@@ -32,7 +36,7 @@ public sealed class QuotesApiFactory : WebApplicationFactory<Program>
     {
         var builder = new SqlConnectionStringBuilder(sqlServerConnectionString)
         {
-            InitialCatalog = $"QuotesTest_{Guid.NewGuid():N}"
+            InitialCatalog = $"QuotesTest_{_testRunId}"
         };
         _sqlConnectionString = builder.ConnectionString;
         _redisConnectionString = redisConnectionString;
@@ -93,6 +97,18 @@ public sealed class QuotesApiFactory : WebApplicationFactory<Program>
             {
                 services.Remove(notificationsConsumer);
             }
+
+            // Every test gets a fresh database, so identity columns restart at 1 and nearly
+            // every test's first quote is quote 1 — but all tests share one Redis container.
+            // With the production InstanceName ("quotesapi:") every test would read and write
+            // the same "quotesapi:quote:1" L2 entry (5-minute expiration), so one test's cached
+            // value — e.g. the "not found" left behind when HybridCache's background L2 write
+            // lands after the GET-by-id handler's RemoveAsync — would leak into the next test
+            // and turn its freshly created quote into a 404. A per-factory prefix gives each
+            // test its own Redis keyspace, matching the per-test database isolation above.
+            // Registered after AddQuotesModule's Configure, so this InstanceName wins.
+            services.Configure<RedisCacheOptions>(options =>
+                options.InstanceName = $"quotesapi-test-{_testRunId}:");
 
             services.RemoveAll<IClock>();
             services.AddSingleton<IClock>(Clock);
